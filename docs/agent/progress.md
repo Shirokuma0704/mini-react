@@ -5,7 +5,7 @@ Single source of truth for the orchestrate loop. One row per feature, in depende
 
 | # | Feature | Depends on | Tests | Codex | Commit | Him | Why doc |
 |---|---------|------------|-------|-------|--------|-----|---------|
-| 1 | domToVdom: real DOM node → VDOM node (spec-draft §1) | — | 8/8 pass (test-run-2.log) | r1 (5.6-sol): 4 issues → 2 fixed, 1 to him, 1 process. r2 (6-astra): fixes confirmed; bookkeeping fixed; #2 resolved by him (keep whitespace) | see git log | | draft in docs/why-draft/ |
+| 1 | domToVdom: real DOM node → VDOM node (spec-draft §1) | — | 8/8 pass (test-run-2.log) | r1 (5.6-sol): 4 issues → 2 fixed, 1 to him, 1 process. r2 (6-astra): fixes confirmed; bookkeeping fixed; #2 resolved by him (keep whitespace) | see git log | | jungle-notes/mini-react/VDOM 변환.md |
 
 Ahead of his verification: 1/3
 

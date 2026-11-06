@@ -14,7 +14,7 @@ This folder is a **trial run** of the framework (11-06), not his real mini React
 
 ## Docs
 - Progress (agent): docs/agent/progress.md
-- His "why" docs (Obsidian): TODO(상철님 — ask on first doc)
+- His "why" docs (Obsidian): jungle-notes/mini-react/ (his choice, 11-06)
 - Friction log: ../friction-log.md
 
 ## Git
