@@ -1,0 +1,20 @@
+
+> trial-vdom@1.0.0 test
+> node --test
+
+✔ spec example: <p class="msg">hi <b>there</b> bye</p> (79.006ms)
+✔ kind tells text and element apart (8.3195ms)
+✔ children keep document order (8.0371ms)
+✔ nested nodes use the same shape at every depth (11.5411ms)
+✔ all attributes are kept as name -> value (9.1683ms)
+✔ an attribute named __proto__ is kept as an own property (5.5747ms)
+✔ element with no attributes and no children (6.4277ms)
+✔ a text node converts on its own (5.4866ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2144.6445

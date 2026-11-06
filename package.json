@@ -1,0 +1,16 @@
+{
+  "name": "trial-vdom",
+  "version": "1.0.0",
+  "description": "Orchestrate framework trial: real DOM -> VDOM (spec-draft section 1)",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "jsdom": "^31.0.0"
+  }
+}
