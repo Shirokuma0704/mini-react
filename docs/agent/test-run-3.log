@@ -1,0 +1,21 @@
+
+> trial-vdom@1.0.0 test
+> node --test
+
+✔ whitespace in text is kept exactly (70.4042ms)
+✔ spec example: <p class="msg">hi <b>there</b> bye</p> (10.0144ms)
+✔ kind tells text and element apart (5.6953ms)
+✔ children keep document order (14.9571ms)
+✔ nested nodes use the same shape at every depth (5.9829ms)
+✔ all attributes are kept as name -> value (5.7057ms)
+✔ an attribute named __proto__ is kept as an own property (4.9104ms)
+✔ element with no attributes and no children (5.602ms)
+✔ a text node converts on its own (9.4592ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1498.6599

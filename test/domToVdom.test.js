@@ -1,8 +1,7 @@
 // Tests for spec-draft.md section 1 (VDOM node), written before the implementation.
-// Every expectation below is traced to a line of the spec, with one PROVISIONAL exception: the spec writes the text
-// children as "hi" / "bye", but these tests expect the DOM's own text ("hi ", " bye", spaces kept). The spec has no
-// whitespace rule yet; that decision is 상철님's and is listed in docs/agent/progress.md (Codex review 11-06, #2).
-// Other behaviour the spec does not decide (comments, tag case for SVG) is not tested here.
+// Every expectation below is traced to a line of the spec. Whitespace in text is kept exactly as the DOM has it
+// ("hi ", " bye") — spec rule added 11-06 by 상철님 ("그대로 두기") after Codex review #2.
+// Behaviour the spec does not decide (comments, tag case for SVG) is not tested here.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
@@ -13,6 +12,15 @@ function firstNode(html) {
   const dom = new JSDOM(`<!DOCTYPE html><body>${html}</body>`);
   return dom.window.document.body.firstChild;
 }
+
+// Spec: whitespace rule — leading/trailing spaces in text stay.
+test('whitespace in text is kept exactly', () => {
+  const vdom = domToVdom(firstNode('<p>  a  <b> b </b>  </p>'));
+  assert.deepEqual(
+    vdom.children.map((c) => (c.kind === 'text' ? c.text : c.children[0].text)),
+    ['  a  ', ' b ', '  '],
+  );
+});
 
 // Spec: the worked example, end to end.
 // "종류 / 태그 이름: p / 속성: class = msg / 안에 든 것들: 순서대로 목록 — 글자 "hi", b 노드(안에 글자 "there"), 글자 "bye""
