@@ -29,17 +29,17 @@ Run started 11-09 ~16:30 in a fork session. Role split (his decision 11-09, orch
 
 | # | Feature | Depends on | Tests | Codex | Commit | Him | Why doc |
 |---|---------|------------|-------|-------|--------|-----|---------|
-| 14 | h() → VDOM, h(Component, props) → component node, expand() before diff, on… → events slot (§4-1, §4-8) | Phase 1 | 223/223 pass (test-run-22.log; h.test.js 30, written by Opus first; impl by Sonnet worker, only src/h.js) | NOT RUN: usage limit until 17:11 (16:25 attempt, gpt-6.1-sol refused). Prompt kept for a batch run later | see git log | | jungle-notes/mini-react/h 함수와 컴포넌트 펼치기.md |
-| 15 | events: relay attached once, handler pointer swapped on re-render (§4-2) | 14 | 240/240 pass (test-run-23.log; events.test.js 17 by Opus first; impl by Sonnet: src/events.js new + 2 lines in src/render.js) | SKIPPED for now by 상철님 ("일단 넘어가줘") | see git log | | jungle-notes/mini-react/이벤트 중계 함수.md |
-| 16 | FunctionComponent + mount()/update() + useState (call order, cursor reset, value or updater, skip same value) + check page (counter) (§4-3, §4-4) | 14, 15 | 269/269 pass (test-run-24.log; component.test.js 19 by Opus first, impl src/component.js by Sonnet; check page hooks.html + src/hooksPage.js + tests by Opus) | SKIPPED for now by 상철님 | see git log | | jungle-notes/mini-react/FunctionComponent와 useState.md |
-| 17 | batching: many set calls → one render in a microtask (§4-4) | 16 | | | | | |
+| 14 | h() → VDOM, h(Component, props) → component node, expand() before diff, on… → events slot (§4-1, §4-8) | Phase 1 | 223/223 pass (test-run-22.log; h.test.js 30, written by Opus first; impl by Sonnet worker, only src/h.js) | NOT RUN: usage limit until 17:11 (16:25 attempt, gpt-6.1-sol refused). Prompt kept for a batch run later | see git log | ✔ 11-09 16:47 (hooks.html: counter +1 → 함수로 두 번 → 값으로 두 번 → 같은 값 gave "1 3 4 4"; push로 추가 did not re-render, then 앞에 추가 showed the hidden item: "봤어") | jungle-notes/mini-react/h 함수와 컴포넌트 펼치기.md |
+| 15 | events: relay attached once, handler pointer swapped on re-render (§4-2) | 14 | 240/240 pass (test-run-23.log; events.test.js 17 by Opus first; impl by Sonnet: src/events.js new + 2 lines in src/render.js) | SKIPPED for now by 상철님 ("일단 넘어가줘") | see git log | ✔ 11-09 16:47 (hooks.html: counter +1 → 함수로 두 번 → 값으로 두 번 → 같은 값 gave "1 3 4 4"; push로 추가 did not re-render, then 앞에 추가 showed the hidden item: "봤어") | jungle-notes/mini-react/이벤트 중계 함수.md |
+| 16 | FunctionComponent + mount()/update() + useState (call order, cursor reset, value or updater, skip same value) + check page (counter) (§4-3, §4-4) | 14, 15 | 269/269 pass (test-run-24.log; component.test.js 19 by Opus first, impl src/component.js by Sonnet; check page hooks.html + src/hooksPage.js + tests by Opus) | SKIPPED for now by 상철님 | see git log | ✔ 11-09 16:47 (hooks.html: counter +1 → 함수로 두 번 → 값으로 두 번 → 같은 값 gave "1 3 4 4"; push로 추가 did not re-render, then 앞에 추가 showed the hidden item: "봤어") | jungle-notes/mini-react/FunctionComponent와 useState.md |
+| 17 | batching: many set calls → one render in a microtask (§4-4) | 16 | 283/283 pass (test-run-25.log; batch.test.js 12 by Opus first; impl by Sonnet: requestUpdate + updateQueued flag in src/component.js only; check page gets "타이머로 두 번" + 2 page tests by Opus) | SKIPPED for now by 상철님 | see git log | | jungle-notes/mini-react/묶기 (batching).md |
 | 18 | useEffect: after patch, cleanup, deps (§4-5) | 16 | | | | | |
 | 19 | useMemo: computed in place, deps (§4-6) | 16 | | | | | |
 | 20 | hook rules: count differs → error, order differs → warn, child calls a hook → error (§4-3, §4-7) | 16, 18, 19 | | | | | |
 
 18 and 19 are independent of each other; everything else is a chain.
 
-Ahead of his verification (Phase 2): 3 (rows 14-16) → STOP until he checks (orchestrate §2).
+Ahead of his verification (Phase 2): 0 (rows 14-16 ✔ 11-09 16:47).
 
 11-09 ~16:30 상철님 after row 14: "Codex검증은 일단 넘어가줘" — continue without Codex for now (limit until 17:11). So the 15-min timer condition "Codex OK" is waived by him for this run; tests pass + fewer than 3 ahead still apply.
 
@@ -73,7 +73,7 @@ Raw replies: docs/agent/codex/<feature>-r<round>.md (model gpt-6.1-sol, reasonin
 
 ## Open disagreements / unsure spots
 <!-- file:line — what — who raised it (me / Codex) -->
-- src/component.js:68 — set re-renders SYNCHRONOUSLY for now (requestUpdate → update()); "함수로 두 번" therefore renders twice on the check page (render count +2). Feature 17 changes only requestUpdate to a microtask — me
+- ~~src/component.js:68 — set re-renders synchronously~~ DONE in row 17: requestUpdate books one update() with queueMicrotask behind an `updateQueued` flag; the flag is lowered BEFORE update() runs, so a set during a re-render books a new one; if update() throws inside the microtask the error is uncaught (surfaces in the console) — Sonnet worker
 - src/component.js:78 — a hook slot is { kind: 'state', value }; the setter closes over its slot object, so an old setter still writes the latest slot — Sonnet worker
 - src/component.js:20 — new FunctionComponent(fn, props = {}); update() before mount() throws a TypeError (no guard) — Sonnet worker
 - src/hooksPage.js — check page is mine (Opus): cards = counter, todo list (keys, new array vs push); "그린 횟수" is written by a wrapper outside the component's container. Todo ids come from a plain per-page counter, not state, so "push로 추가" calls no set (browser check 11-09 found duplicate ids from my first version: "할 일 4" ×4) — me

@@ -45,6 +45,27 @@ test('counter card: "같은 값" does not re-render (render count unchanged)', a
   assert.equal(doc.getElementById('counter-renders').textContent, before);
 });
 
+test('counter card (feature 17 batching): "함수로 두 번" and "값으로 두 번" each add ONE render', async () => {
+  const { doc, press } = open();
+  const renders = () => Number(doc.getElementById('counter-renders').textContent);
+  const start = renders();
+  await press('counter', '함수로 두 번');
+  assert.equal(renders(), start + 1);
+  await press('counter', '값으로 두 번');
+  assert.equal(renders(), start + 2);
+});
+
+test('counter card: "타이머로 두 번" adds 2 after the timer, in ONE render (Q5-2)', async () => {
+  const { doc, press } = open();
+  const renders = () => Number(doc.getElementById('counter-renders').textContent);
+  const start = renders();
+  await press('counter', '타이머로 두 번');
+  assert.equal(doc.querySelector('#counter .big').textContent, '0'); // timer not fired yet
+  await new Promise((r) => setTimeout(r, 400));
+  assert.equal(doc.querySelector('#counter .big').textContent, '2');
+  assert.equal(renders(), start + 1);
+});
+
 test('todo card: "앞에 추가" puts a new item first and keeps the old <li> elements', async () => {
   const { doc, press } = open();
   const old = [...doc.querySelectorAll('#todos li')];

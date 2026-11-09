@@ -46,6 +46,19 @@ function Counter() {
       ['값으로 두 번'],
     ),
     h('button', { type: 'button', onClick: () => setCount(count) }, ['같은 값']),
+    // Q5-2: a set from a timer is not wrapped by the event relay; batching must still make it one render.
+    h(
+      'button',
+      {
+        type: 'button',
+        onClick: () =>
+          setTimeout(() => {
+            setCount((c) => c + 1);
+            setCount((c) => c + 1);
+          }, 300),
+      },
+      ['타이머로 두 번'],
+    ),
   ]);
 }
 
