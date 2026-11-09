@@ -1,12 +1,15 @@
-// `npm start`: serve this folder over http so the browser can load ES modules (they do not load from file://).
-// Node's own http module only, no dependency. Only files under this folder are served; node_modules and dot-folders
-// (.git) are refused.
+// `npm start`: serve the page over http so the browser can load ES modules (they do not load from file://).
+// Node's own http module only, no dependency. Only the page files (ALLOWED below) are served.
+//
 import http from 'node:http';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
+
+// The only files the page needs: index.html, style.css and the ES modules directly in src/.
+const ALLOWED = /^\/(?:index\.html|style\.css|src\/[A-Za-z0-9_-]+\.js)$/;
 
 const TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -31,14 +34,13 @@ export function createServer() {
     } catch {
       return send(res, 400, 'bad request');
     }
-    if (urlPath.endsWith('/')) urlPath += 'index.html';
+    if (urlPath === '/') urlPath = '/index.html';
 
-    const file = path.resolve(ROOT, '.' + urlPath);
-    const rel = path.relative(ROOT, file);
-    if (rel.startsWith('..') || path.isAbsolute(rel)) return send(res, 403, 'forbidden');
-    // Lower-cased: Windows file names ignore case, so /NODE_MODULES/ reaches the same folder (Codex layout r1).
-    const parts = rel.toLowerCase().split(path.sep);
-    if (parts.some((p) => p === 'node_modules' || p.startsWith('.'))) return send(res, 403, 'forbidden');
+    // Allowlist, not a blocklist: Windows reaches the same folder through many spellings (/NODE_MODULES/,
+    // node_modules::$INDEX_ALLOCATION, node_modules.), found by Codex layout r1 and r2. Only the page's own files
+    // match this pattern, and none of them can name another folder.
+    if (!ALLOWED.test(urlPath)) return send(res, 404, 'not found');
+    const file = path.join(ROOT, ...urlPath.slice(1).split('/'));
 
     try {
       const body = await readFile(file);

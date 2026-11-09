@@ -60,6 +60,29 @@ test('paths outside the folder are refused', async () => {
   }
 });
 
+// Codex layout r2: Windows stream aliases (::$INDEX_ALLOCATION) and trailing-dot names reach node_modules too.
+// So the server serves an allowlist (index.html, style.css, src/*.js) instead of blocking names.
+test('Windows path aliases cannot reach node_modules', async () => {
+  for (const path of [
+    '/node_modules::$INDEX_ALLOCATION/jsdom/package.json',
+    '/node_modules%3A%3A%24INDEX_ALLOCATION/jsdom/package.json',
+    '/node_modules./jsdom/package.json',
+    '/node_modules%20/jsdom/package.json',
+    '/src::$DATA/../package.json',
+    '/index.html::$DATA',
+  ]) {
+    const status = await rawGet(path);
+    assert.ok(status === 400 || status === 403 || status === 404, `${path} -> ${status}`);
+  }
+});
+
+test('only the page files are served (not package.json, docs, tests)', async () => {
+  for (const path of ['/package.json', '/CLAUDE.md', '/docs/agent/progress.md', '/test/page.test.js', '/server.js']) {
+    const status = await rawGet(path);
+    assert.ok(status === 403 || status === 404, `${path} -> ${status}`);
+  }
+});
+
 test('node_modules and .git are not served', async () => {
   // Windows file names ignore case, so the upper-case spellings must be refused too (Codex layout r1).
   for (const path of ['/node_modules/jsdom/package.json', '/NODE_MODULES/jsdom/package.json', '/Node_Modules/jsdom/package.json', '/.git/HEAD', '/.GIT/HEAD']) {
