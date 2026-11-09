@@ -8,7 +8,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
 import { h } from '../src/h.js';
-import { FunctionComponent, useState } from '../src/component.js';
+import { FunctionComponent, useState, useEffect } from '../src/component.js';
 
 function setup() {
   const { window } = new JSDOM('<!DOCTYPE html><body><div id="c"></div><div id="d"></div></body>');
@@ -230,4 +230,57 @@ test('update() called directly still re-renders synchronously (only set is batch
   fc.mount(container);
   fc.update();
   assert.equal(container.textContent, '2');
+});
+
+// ---------- a direct update() makes a pending batch unnecessary (spec-draft §4-4, 11-09 evening Q4) ----------
+// "set이 예약한 다시 그리기가 남아 있는데 누가 update()로 바로 그렸으면, 그 예약은 버린다." ("버려도 될꺼같아")
+// Boundary (orchestrator's addition): a set made DURING or AFTER that direct update() is a new request and is kept.
+
+test('Q4: set, then update() directly in the same turn → the booked re-render is dropped (one render, not two)', async () => {
+  const { container } = setup();
+  const p = probe();
+  const fc = new FunctionComponent(p.App);
+  fc.mount(container);
+  p.setA(1); // books a re-render
+  fc.update(); // draws a = 1 right now
+  assert.equal(container.textContent, '1,0');
+  await settle();
+  assert.equal(container.textContent, '1,0');
+  assert.equal(p.runs, 2); // mount + the direct update; the booked one is dropped
+});
+
+test('Q4 boundary: a set made by an effect while the direct update() runs is NOT dropped', async () => {
+  const { container } = setup();
+  let runs = 0;
+  let setLater;
+  const App = () => {
+    runs += 1;
+    const [v, setV] = useState(0);
+    const [seen, setSeen] = useState(0);
+    setLater = setV;
+    useEffect(() => {
+      if (v > 0) setSeen(v); // a set made after patch, inside the direct update()
+    }, [v]);
+    return h('p', {}, [`${v}/${seen}`]);
+  };
+  const fc = new FunctionComponent(App);
+  fc.mount(container);
+  setLater(1); // books a re-render
+  fc.update(); // draws 1/0, then its effect sets seen = 1 (a new request)
+  await settle();
+  assert.equal(container.textContent, '1/1');
+  assert.equal(runs, 3); // mount, direct update, the re-render the effect asked for
+});
+
+test('Q4 boundary: a set made after the direct update() returned (same turn) still re-renders once', async () => {
+  const { container } = setup();
+  const p = probe();
+  const fc = new FunctionComponent(p.App);
+  fc.mount(container);
+  p.setA(1);
+  fc.update();
+  p.setB(5); // new request after the direct draw
+  await settle();
+  assert.equal(container.textContent, '1,5');
+  assert.equal(p.runs, 3);
 });

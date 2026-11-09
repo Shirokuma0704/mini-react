@@ -24,6 +24,8 @@
 // Spec §4-4 (batching): many set calls in one turn re-render only once. The first set books one update() as a
 //            microtask (= right after the JS work that is running now); the other sets just store their value.
 //            Calling update() directly is still immediate; only setters are batched. Each component batches on its own.
+//            A direct update() while a booked re-render is pending discards that booking (the screen is already up to
+//            date, so it draws once). A set made during or after that update() is a new request and is not discarded.
 // Spec §4-10: after every mount/update, syncProps (src/controlled.js) makes input/textarea/select boxes that were given
 //            value/checked follow the state, and puts typed-over values back (locked boxes).
 // Spec §4-8: new FunctionComponent(App).mount(container); child components are expanded before diff;
@@ -110,6 +112,7 @@ export class FunctionComponent {
 
   // Re-render after a state change: diff the old root against the new one and patch only the changes.
   update() {
+    this.updateQueued = false; // this draw covers every set so far; a set made from here on raises it again
     const root = this.buildRoot();
     const doc = this.container.ownerDocument;
     patch(this.container, diff(this.root, root), doc);
@@ -146,13 +149,15 @@ export class FunctionComponent {
   }
 
   // "Please re-render", batched (spec §4-4). The first set in a turn books ONE update() with queueMicrotask and raises
-  // the `updateQueued` flag; later sets in the same turn see the flag and only store their value. When the microtask
-  // runs (right after the current JS work ends) it lowers the flag and calls update() once.
+  // the `updateQueued` flag; later sets in the same turn see the flag and only store their value. Every update() lowers
+  // the flag as it starts, and a booked microtask renders only if the flag is still up when it runs. So a direct
+  // update() in between makes the booking useless (already drawn) and it does nothing; a set made during or after
+  // that update() raises the flag again (a new request), and exactly one of the booked microtasks renders it.
   requestUpdate() {
     if (this.updateQueued) return;
     this.updateQueued = true;
     queueMicrotask(() => {
-      this.updateQueued = false;
+      if (!this.updateQueued) return;
       this.update();
     });
   }
