@@ -29,8 +29,8 @@ Run of 11-09 after the diff grill: normal orchestrate stops again (the "끝까�
 
 Order note: debug panel (scope 6) comes after diff/patch (scope 8) because it colors from the diff result.
 
-Ahead of his verification: 9 (rows 2-10) → over 3: wait for him after every feature.
-Latest full run: test-run-17.log, 181/181 pass.
+Ahead of his verification: 12 (rows 2-13) → over 3: wait for him.
+Latest full run: test-run-21.log, 193/193 pass.
 
 ## Real-browser check of row 10 (11-09, before 14:26, Claude app built-in browser, npm start on port 5174)
 Driven by script in the page (not typed): (1) sample 1, unkeyed, new li put before the first + text edit → Patch → old li elements reused (same objects), colors follow index pairing (expected for unkeyed lists, §3-2); (2) indented keyed [a,b,c] → [c,x,a,b] → 실제 영역 has no key attributes, preview keeps them, li elements a/b/c reused, c's group moved, x's group added, trailing "
