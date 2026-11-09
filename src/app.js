@@ -1,5 +1,6 @@
 // The verification page (spec-draft §2). mountApp wires behaviour onto index.html's elements.
 // Takes `doc` so the same code runs in a browser and on a jsdom document in tests.
+import { createSync } from './sync.js';
 
 export function mountApp(doc) {
   const els = {
@@ -18,5 +19,8 @@ export function mountApp(doc) {
     debugNew: doc.getElementById('debug-new'),
   };
 
-  return { els };
+  // §2-1: text box <-> preview.
+  const sync = createSync({ source: els.source, preview: els.preview, doc });
+
+  return { els, sync };
 }

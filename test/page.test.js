@@ -42,3 +42,19 @@ test('mountApp runs on the page without throwing and returns the app', () => {
   const { app } = loadPage({ mount: true });
   assert.equal(typeof app, 'object');
 });
+
+// Codex sync r1 #2: sync must work through mountApp on the real page, both ways.
+test('on the page, text box and preview sync both ways', () => {
+  const { doc, win } = loadPage({ mount: true });
+  const fire = (el, type) => el.dispatchEvent(new win.Event(type, { bubbles: true }));
+  const source = doc.getElementById('source');
+  const preview = doc.getElementById('preview');
+  source.value = '<p>from text</p>';
+  fire(source, 'input');
+  fire(source, 'focusout');
+  assert.equal(preview.innerHTML, '<p>from text</p>');
+  preview.querySelector('p').firstChild.nodeValue = 'from preview';
+  fire(preview, 'input');
+  fire(preview, 'focusout');
+  assert.equal(source.value, '<p>from preview</p>');
+});
