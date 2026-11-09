@@ -5,7 +5,7 @@
 // It is a probe for checking, not part of the component: it shows whether a set really re-ran the component
 // (spec §4-4 "같은 값이면 다시 그리지 않고 건너뛴다").
 import { h } from './h.js';
-import { FunctionComponent, useState, useEffect } from './component.js';
+import { FunctionComponent, useState, useEffect, useMemo } from './component.js';
 
 // Wrap a component so every run bumps a number shown in `out`.
 function countRenders(Component, out) {
@@ -143,6 +143,45 @@ function makeTimer(probe, tickMs, startRunning) {
   };
 }
 
+// ---------- 거르기 (spec §4-6 useMemo, §4-4 pointer comparison) ----------
+// "계산 횟수" is a probe outside the component: how many times the memo's fn really ran.
+function makeFilter(onCompute) {
+  let next = 7;
+  return function Filter() {
+    const [nums, setNums] = useState([1, 2, 3, 4, 5, 6]);
+    const [onlyEven, setOnlyEven] = useState(false);
+    const [other, setOther] = useState(0);
+
+    const shown = useMemo(() => {
+      onCompute();
+      // Always a NEW array (filter makes one). Returning `nums` itself would share the pointer, and a push would
+      // show up through the remembered value even though the memo never re-ran (found by the page test, 11-09).
+      return nums.filter((n) => !onlyEven || n % 2 === 0);
+    }, [nums, onlyEven]);
+
+    return h('div', {}, [
+      h('div', { class: 'demo-row' }, [
+        h('button', { type: 'button', onClick: () => setOnlyEven(!onlyEven) }, [onlyEven ? '전부 보기' : '짝수만']),
+        h('button', { type: 'button', onClick: () => setOther(other + 1) }, ['다른 상태 바꾸기']),
+        h('button', { type: 'button', onClick: () => setNums([...nums, next++]) }, ['새 배열로 추가']),
+        h(
+          'button',
+          {
+            type: 'button',
+            onClick: () => {
+              nums.push(next++);
+              setNums(nums);
+            },
+          },
+          ['push로 추가'],
+        ),
+      ]),
+      h('p', { class: 'nums' }, [shown.join(' · ')]),
+      h('output', { class: 'muted' }, [`실제 배열 ${nums.length}개 · 다른 상태 ${other}`]),
+    ]);
+  };
+}
+
 // Options are for tests: a short tick, and a timer that starts paused (there is no unmount, so a running interval
 // would keep the test process alive).
 export function mountHooksPage(doc, { tickMs = 1000, timerStartsRunning = true } = {}) {
@@ -161,4 +200,11 @@ export function mountHooksPage(doc, { tickMs = 1000, timerStartsRunning = true }
     },
   };
   new FunctionComponent(countRenders(makeTimer(probe, tickMs, timerStartsRunning), byId('timer-renders'))).mount(byId('timer'));
+
+  let computes = 0;
+  const onCompute = () => {
+    computes += 1;
+    byId('filter-computes').textContent = String(computes);
+  };
+  new FunctionComponent(countRenders(makeFilter(onCompute), byId('filter-renders'))).mount(byId('filter'));
 }

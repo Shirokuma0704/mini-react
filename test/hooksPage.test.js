@@ -134,6 +134,38 @@ test('timer card: the no-deps effect saw the number already on screen (it runs a
   assert.equal(text(doc, 'timer-saw'), doc.querySelector('#timer .big').textContent);
 });
 
+// ---------- filter card (feature 19, useMemo) ----------
+
+test('the header link back to the Phase 1 page is present (it got lost twice while editing the header)', () => {
+  const { doc } = open();
+  const link = doc.querySelector('.top a[href="./index.html"]');
+  assert.ok(link);
+  assert.match(link.textContent, /Phase 1/);
+});
+
+test('filter card: computed once on mount; "다른 상태 바꾸기" re-renders without recomputing; toggling recomputes', async () => {
+  const { doc, press } = open();
+  assert.equal(text(doc, 'filter-computes'), '1');
+  await press('filter', '다른 상태 바꾸기');
+  assert.equal(text(doc, 'filter-renders'), '2');
+  assert.equal(text(doc, 'filter-computes'), '1');
+  await press('filter', '짝수만');
+  assert.equal(text(doc, 'filter-computes'), '2');
+  assert.equal(doc.querySelector('#filter .nums').textContent, '2 · 4 · 6');
+});
+
+test('filter card: "새 배열로 추가" recomputes; "push로 추가" then "다른 상태 바꾸기" shows the stale list (Q5-5 trap)', async () => {
+  const { doc, press } = open();
+  await press('filter', '새 배열로 추가');
+  assert.equal(doc.querySelector('#filter .nums').textContent, '1 · 2 · 3 · 4 · 5 · 6 · 7');
+  const computes = text(doc, 'filter-computes');
+  await press('filter', 'push로 추가'); // same pointer → set skipped, no render
+  await press('filter', '다른 상태 바꾸기'); // re-render, but [nums] is the same pointer → memo not recomputed
+  assert.equal(text(doc, 'filter-computes'), computes);
+  assert.equal(doc.querySelector('#filter .nums').textContent, '1 · 2 · 3 · 4 · 5 · 6 · 7'); // 8 is hidden
+  assert.match(doc.querySelector('#filter .muted').textContent, /실제 배열 8개/); // but the array has 8
+});
+
 test('no key attribute reaches the real DOM of the cards (§3-3 Q12)', async () => {
   const { doc, press } = open();
   await press('todos', '앞에 추가');

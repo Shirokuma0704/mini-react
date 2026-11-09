@@ -9,7 +9,7 @@
 <body>
   <header class="top">
     <h1>mini-react 훅 확인 페이지</h1>
-    <p class="kicker">Phase 2 · FunctionComponent · useState · useEffect · <a href="./index.html">Phase 1 검증 페이지로</a></p>
+    <p class="kicker">Phase 2 · FunctionComponent · useState · useEffect · useMemo · <a href="./index.html">Phase 1 검증 페이지로</a></p>
   </header>
 
   <p class="lead">카드마다 버튼을 누르기 <b>전에</b> 무엇이 나올지 먼저 적어 보세요. "그린 횟수"는 컴포넌트 함수가 몇 번 실행됐는지예요. 카드 안의 화면은 모두 우리 라이브러리(h → diff → patch)가 그려요.</p>
@@ -49,6 +49,18 @@
       </ul>
       <div id="timer" class="demo"></div>
       <p class="renders">그린 횟수 <output id="timer-renders">0</output> · 켜진 타이머 <output id="timer-alive">0</output> · effect가 본 숫자 <output id="timer-saw"></output></p>
+    </section>
+
+    <section class="panel">
+      <h2>거르기 <span class="hint">useMemo · 지켜볼 값 · 명세 4-6</span></h2>
+      <ul class="try">
+        <li>보이는 목록: <code>useMemo(() =&gt; 거르기(nums), [nums, onlyEven])</code></li>
+        <li><b>짝수만 / 전부 보기</b>: <code>onlyEven</code>이 바뀜 → 다시 계산</li>
+        <li><b>다른 상태 바꾸기</b>: 다시 그려도 지켜볼 값이 그대로면 계산 안 함</li>
+        <li><b>새 배열로 추가</b> vs <b>push로 추가</b>: push 뒤에 다른 상태를 바꿔 보세요</li>
+      </ul>
+      <div id="filter" class="demo"></div>
+      <p class="renders">그린 횟수 <output id="filter-renders">0</output> · 계산 횟수 <output id="filter-computes">0</output></p>
     </section>
   </main>
 

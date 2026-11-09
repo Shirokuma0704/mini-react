@@ -1,8 +1,11 @@
-// FunctionComponent + useState (feature 16) + useEffect (feature 18).
+// FunctionComponent + useState (feature 16) + useEffect (feature 18) + useMemo (feature 19).
 // Spec §4-5: useEffect(fn, deps) runs fn AFTER patch has really changed the screen, never while the component function
 //            runs. deps: no list = every render; [] = first render only; [a, b] = compare slot by slot with Object.is
 //            (a pointer comparison) and run again if any one differs. fn may return a cleanup function; the library calls
 //            it right before that same effect runs again (clearing what an effect set up is that effect's own job).
+// Spec §4-6: useMemo(fn, deps) computes right there while App() runs (unlike useEffect, which waits until after patch)
+//            and hands back the value. Same watched values as last time (compared like useEffect) = the remembered
+//            value, different = compute again. No list = compute on every render; [] = compute once.
 // Spec §4-3: state lives in a `hooks` array outside the function; useState finds its slot by "which call am I" (cursor),
 //            and mount()/update() reset the cursor to 0 right before calling the component.
 // Spec §4-4: the setter takes a value or a function (called with the latest value); the same value (Object.is,
@@ -129,11 +132,34 @@ export function useEffect(fn, deps) {
     component.hooks[index] = { kind: 'effect', deps: undefined, cleanup: null, pending: null };
   }
   const slot = component.hooks[index];
-  const changed =
-    first ||
+  if (first || depsChanged(deps, slot.deps)) slot.pending = { fn, deps };
+}
+
+// Compute during render, right where it is called; reuse the remembered value while the deps are unchanged.
+export function useMemo(fn, deps) {
+  const component = currentComponent;
+  if (component === null) {
+    throw new Error('useMemo can only be called while a FunctionComponent is rendering');
+  }
+  const index = component.cursor++;
+  const first = index >= component.hooks.length;
+  if (first) {
+    component.hooks[index] = { kind: 'memo', deps: undefined, value: undefined };
+  }
+  const slot = component.hooks[index];
+  if (first || depsChanged(deps, slot.deps)) {
+    slot.value = fn();
+    slot.deps = deps;
+  }
+  return slot.value;
+}
+
+// True when an effect/memo must run again: no list on either side, different length, or any item differs (Object.is).
+function depsChanged(deps, previous) {
+  return (
     deps === undefined ||
-    slot.deps === undefined ||
-    deps.length !== slot.deps.length ||
-    deps.some((d, i) => !Object.is(d, slot.deps[i]));
-  if (changed) slot.pending = { fn, deps };
+    previous === undefined ||
+    deps.length !== previous.length ||
+    deps.some((d, i) => !Object.is(d, previous[i]))
+  );
 }
