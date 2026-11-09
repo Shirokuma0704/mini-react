@@ -8,6 +8,7 @@
 //
 // Goal: html -> VDOM -> html -> VDOM gives the same VDOM. The edge cases below come from Codex review r1 (11-09).
 import { domToVdom } from './domToVdom.js';
+import { attachEvents } from './events.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const MATH_NS = 'http://www.w3.org/1998/Math/MathML';
@@ -45,6 +46,7 @@ function createNode(vnode, doc, parentNs, opts) {
     if (name === 'key' && opts.keys === false) continue;
     el.setAttribute(name, value);
   }
+  attachEvents(el, vnode.events); // handlers are never attributes (spec §4-2)
   const inner = childNamespace(vnode.tag, ns);
   for (const child of vnode.children) {
     el.appendChild(createNode(child, doc, inner, opts));
