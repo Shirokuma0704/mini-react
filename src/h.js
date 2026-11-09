@@ -1,6 +1,10 @@
 // h() builds VDOM nodes by hand; expand() unrolls component nodes into plain VDOM before diff.
 // Spec §4-1: h('button', {}, ['3']) is a small helper; h(Comp, props) only records "this component, these props".
 // Spec §4-2 / §4-8: props named on... (functions) go to the node's `events` slot; diff never looks at events.
+// Spec §4-10: on input / textarea / select, `value` and `checked` are also copied to the node's
+//            `props` slot (String value / Boolean checked; null or undefined = not given) so that src/controlled.js can
+//            make the live box follow state. diff never looks at props. Choice the spec does not make: for
+//            <input type=checkbox|radio>, `value` stays a plain attribute (it is not the typed text there).
 // Spec §4-8: expand() calls every component first, so Phase 1's diff and patch work unchanged.
 
 // Turn one child (or nested arrays of children) into VDOM nodes, appended to `out`.
@@ -34,12 +38,29 @@ export function h(type, props, children) {
   const attrs = {};
   const events = {};
   let hasEvents = false;
+  const formProps = {};
+  let hasProps = false;
+  const isForm = type === 'input' || type === 'textarea' || type === 'select';
+  const inputKind = type === 'input' ? String(props?.type ?? '').toLowerCase() : '';
+  const valueIsAttr = inputKind === 'checkbox' || inputKind === 'radio';
   for (const name of Object.keys(props ?? {})) {
     const value = props[name];
     if (/^on[A-Z]/.test(name)) {
       if (typeof value === 'function') {
         events[name.slice(2).toLowerCase()] = value;
         hasEvents = true;
+      }
+    } else if (isForm && name === 'value' && !valueIsAttr) {
+      if (value !== null && value !== undefined) {
+        formProps.value = String(value);
+        attrs[name] = String(value); // also kept as an attribute (= defaultValue), as before
+        hasProps = true;
+      }
+    } else if (type === 'input' && name === 'checked') {
+      if (value !== null && value !== undefined) {
+        formProps.checked = Boolean(value);
+        if (value === true) attrs[name] = ''; // as before; false stays out of attrs but is kept in props
+        hasProps = true;
       }
     } else if (value === true) {
       attrs[name] = '';
@@ -49,6 +70,7 @@ export function h(type, props, children) {
   }
   const node = { kind: 'element', tag: type, attrs, children: normalizeChildren(children) };
   if (hasEvents) node.events = events;
+  if (hasProps) node.props = formProps;
   return node;
 }
 
@@ -71,5 +93,6 @@ export function expand(vnode) {
   }
   const out = { kind: 'element', tag: node.tag, attrs: { ...node.attrs }, children };
   if (node.events) out.events = { ...node.events };
+  if (node.props) out.props = { ...node.props };
   return out;
 }

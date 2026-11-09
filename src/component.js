@@ -24,6 +24,8 @@
 // Spec §4-4 (batching): many set calls in one turn re-render only once. The first set books one update() as a
 //            microtask (= right after the JS work that is running now); the other sets just store their value.
 //            Calling update() directly is still immediate; only setters are batched. Each component batches on its own.
+// Spec §4-10: after every mount/update, syncProps (src/controlled.js) makes input/textarea/select boxes that were given
+//            value/checked follow the state, and puts typed-over values back (locked boxes).
 // Spec §4-8: new FunctionComponent(App).mount(container); child components are expanded before diff;
 //            a re-render runs everything from the root, and diff -> patch touches only what changed.
 import { expand } from './h.js';
@@ -31,6 +33,7 @@ import { renderInto } from './render.js';
 import { diff } from './diff.js';
 import { patch } from './patch.js';
 import { syncEvents } from './events.js';
+import { syncProps } from './controlled.js';
 
 // The component whose function is running right now (null when no component is rendering).
 let currentComponent = null;
@@ -100,6 +103,7 @@ export class FunctionComponent {
     const doc = container.ownerDocument;
     renderInto(container, root, doc, { keys: false });
     syncEvents(container, root);
+    syncProps(container, root);
     this.root = root;
     this.runEffects();
   }
@@ -110,6 +114,7 @@ export class FunctionComponent {
     const doc = this.container.ownerDocument;
     patch(this.container, diff(this.root, root), doc);
     syncEvents(this.container, root);
+    syncProps(this.container, root);
     this.root = root;
     this.runEffects();
   }
