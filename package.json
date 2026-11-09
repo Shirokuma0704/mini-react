@@ -1,7 +1,7 @@
 {
-  "name": "trial-vdom",
+  "name": "mini-react",
   "version": "1.0.0",
-  "description": "Orchestrate framework trial: real DOM -> VDOM (spec-draft section 1)",
+  "description": "바닐라 JS로 만드는 미니 React: 실제 DOM → VDOM → diff → patch, 그리고 hooks",
   "main": "index.js",
   "scripts": {
     "test": "node --test"
