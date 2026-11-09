@@ -16,7 +16,7 @@ this run by his choice; rows 2-9 are all "ahead" until he checks them.
 | 5 | broken-HTML warning (scope 4, spec §2-1) | 3 | 82/82 pass (test-run-8.log) | PENDING: Codex usage limit until 16:39 | see git log | | jungle-notes/mini-react/깨진 HTML 경고.md |
 | 6 | history tree (pure module) + tree view + move log (scope 5, spec §2-2) | 3 | 103/103 pass (test-run-9.log) | PENDING: Codex usage limit until 16:39 | see git log | | jungle-notes/mini-react/히스토리 트리.md |
 | 7 | samples 1/2 (scope 7, spec §2-4) | 3, 4 | 111/111 pass (test-run-10.log) | PENDING: Codex usage limit until 16:39 | see git log | | jungle-notes/mini-react/샘플.md |
-| 8 | PROVISIONAL diff/patch + wire Patch / back / forward + jsdom flow test (scope 8) | 2, 6 | | | | | |
+| 8 | PROVISIONAL diff/patch + wire Patch / back / forward + jsdom flow test (scope 8) | 2, 6 | 123/123 pass (test-run-11.log; flow = test/flow.test.js) | PENDING: Codex usage limit until 16:39 | see git log | | jungle-notes/mini-react/Patch 흐름 (임시 diff·patch).md |
 | 9 | debug panel colored from the diff result (scope 6, spec §2-3) | 8 | | | | | |
 
 Order note: debug panel (scope 6) comes after diff/patch (scope 8) because it colors from the diff result.
@@ -30,7 +30,11 @@ Both preferred models refused with "usage limit, try again at 4:39 PM". Not swit
 Raw replies: docs/agent/codex/<feature>-r<round>.md (model gpt-6.1-sol, reasoning effort high, read-only sandbox).
 
 ## PROVISIONAL (replace after the diff grill, spec §2-5)
-<!-- filled by feature 8 -->
+- src/diff.js — PROVISIONAL, replace after the diff grill: always returns ONE change `{ type: 'replace', path: [], node: newRoot }`
+- src/patch.js — PROVISIONAL, replace after the diff grill: applies only replace-at-root (redraws everything inside 실제 영역); any other change throws "PROVISIONAL patch: …" on purpose
+- test/diffPatch.test.js — pins only the provisional contract; rewrite with the real diff
+- src/history.js — "same version" uses deep equality because the provisional diff cannot say "no change"; may switch to "diff returned []" later
+- OPEN QUESTION FOR HIM: change-list format `{ type, path, node? }` — path = child indexes from the root ([] = root, [1,0] = root.children[1].children[0]); only type 'replace' so far. Keep it, or decide it in the diff grill? Note: comments are dropped from the VDOM but never present in 실제 영역 either (it is always drawn from the VDOM), so VDOM index = DOM index there.
 
 ## Open disagreements / unsure spots
 <!-- file:line — what — who raised it (me / Codex) -->
@@ -55,6 +59,8 @@ Raw replies: docs/agent/codex/<feature>-r<round>.md (model gpt-6.1-sol, reasonin
 - src/treeView.js — tree drawn as nested lists with buttons; current = filled, path to root = outlined; shape left open by §2-5 — me
 - src/samples.js — SAMPLE CONTENT IS MINE, NOT HIS (§2-5 left it open): todo card (ul with data-id/class, b inside li, a href/title) and a post (header, ol with a nested ul, code/em, img, br). Chosen to give the 5 diff cases something to bite; replace freely — me
 - src/app.js — load = sample 1 drawn into 실제 영역 first, then v1 = containerToVdom(실제 영역), then the test area is drawn from v1 (follows the assignment order "실제 영역의 샘플 HTML → VDOM → 테스트 영역") — me
+- src/app.js:80 — Patch never rewrites the text box (the user's text stays, comments included); back/forward/tree click rewrite the text box and preview from the version's VDOM — me
+- src/app.js:80 — when Patch moves to an equal ancestor (§2-2), 실제 영역 is patched to that version too — me
 - index.html — layout (two columns: 실제 영역 | 테스트 영역; below: history | debug; sticky control bar) is mine; spec §2-5 says shapes are decided after he sees it — me
 - server.js:12 — serves only index.html, style.css, src/*.js (allowlist after Codex r1+r2 found Windows name aliases); add a pattern if the page ever needs another file — me
 - server.js:62 — port 5173 (PORT env overrides), binds 127.0.0.1 only — me
