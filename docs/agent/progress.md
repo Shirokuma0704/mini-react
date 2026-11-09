@@ -39,6 +39,8 @@ Run started 11-09 ~16:30 in a fork session. Role split (his decision 11-09, orch
 
 18 and 19 are independent of each other; everything else is a chain.
 
+Ahead of his verification (Phase 2): 3 (rows 14-16) → STOP until he checks (orchestrate §2).
+
 11-09 ~16:30 상철님 after row 14: "Codex검증은 일단 넘어가줘" — continue without Codex for now (limit until 17:11). So the 15-min timer condition "Codex OK" is waived by him for this run; tests pass + fewer than 3 ahead still apply.
 
 Rows 11-13 browser check (11-09, Claude app built-in browser, script-driven): sample 1 → move the 3rd li to the front → Patch → 실제 영역 has no key attribute, the moved li is the same element, all li reused, debug shows it yellow; typing duplicate keys → warning line "1번째 줄: 겹친 key "a" <li>".
