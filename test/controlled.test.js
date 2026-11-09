@@ -314,3 +314,82 @@ test('Phase 1 drawing (HTML text → preview) does not lock inputs: §4-10 is ab
   assert.equal(text.value, 'ab');
   assert.equal(box.checked, true);
 });
+
+// ---------- real-browser event timing (found 11-09 19:50 in the Claude app browser, not by jsdom) ----------
+// A real click on a checkbox (or a real pick in a select) fires "input" and then "change" from the browser itself, and
+// the browser runs all pending microtasks between the two (the JS stack is empty after each listener). dispatchEvent and
+// el.click() from a test do NOT do that, which is why the tests above missed it: the restore ran between "input" and
+// "change", flipped the box back, and onChange read the old value (state never changed, render count stayed).
+const drainMicrotasks = async () => {
+  for (let i = 0; i < 20; i += 1) await Promise.resolve();
+};
+const realToggle = async (box, window) => {
+  box.checked = !box.checked;
+  box.dispatchEvent(new window.Event('input', { bubbles: true }));
+  await drainMicrotasks();
+  box.dispatchEvent(new window.Event('change', { bubbles: true }));
+};
+const realPick = async (sel, value, window) => {
+  sel.value = value;
+  sel.dispatchEvent(new window.Event('input', { bubbles: true }));
+  await drainMicrotasks();
+  sel.dispatchEvent(new window.Event('change', { bubbles: true }));
+};
+
+test('real-browser timing: an onChange checkbox still gets the NEW checked value (input → microtasks → change)', async () => {
+  const { container } = setup();
+  const window = container.ownerDocument.defaultView;
+  const App = () => {
+    const [done, setDone] = useState(false);
+    return h('div', {}, [
+      h('input', { type: 'checkbox', checked: done, onChange: (e) => setDone(e.target.checked) }),
+      h('b', {}, [String(done)]),
+    ]);
+  };
+  new FunctionComponent(App).mount(container);
+  const box = container.querySelector('input');
+  await realToggle(box, window);
+  await settle();
+  assert.equal(container.querySelector('b').textContent, 'true');
+  assert.equal(box.checked, true);
+});
+
+test('real-browser timing: a locked checkbox is still put back', async () => {
+  const { container } = setup();
+  const window = container.ownerDocument.defaultView;
+  const App = () => h('input', { type: 'checkbox', checked: false });
+  new FunctionComponent(App).mount(container);
+  const box = container.querySelector('input');
+  await realToggle(box, window);
+  await settle();
+  assert.equal(box.checked, false);
+});
+
+test('real-browser timing: an onChange select still gets the picked value', async () => {
+  const { container } = setup();
+  const window = container.ownerDocument.defaultView;
+  const App = () => {
+    const [choice, setChoice] = useState('b');
+    return h('div', {}, [
+      h('select', { value: choice, onChange: (e) => setChoice(e.target.value) }, options),
+      h('b', {}, [choice]),
+    ]);
+  };
+  new FunctionComponent(App).mount(container);
+  const sel = container.querySelector('select');
+  await realPick(sel, 'c', window);
+  await settle();
+  assert.equal(container.querySelector('b').textContent, 'c');
+  assert.equal(sel.value, 'c');
+});
+
+test('real-browser timing: a locked select is still put back', async () => {
+  const { container } = setup();
+  const window = container.ownerDocument.defaultView;
+  const App = () => h('select', { value: 'b' }, options);
+  new FunctionComponent(App).mount(container);
+  const sel = container.querySelector('select');
+  await realPick(sel, 'c', window);
+  await settle();
+  assert.equal(sel.value, 'b');
+});
