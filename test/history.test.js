@@ -172,3 +172,29 @@ test('vdomEqual: same content equal, attribute order ignored, any difference not
   assert.equal(vdomEqual({ kind: 'text', text: 'x' }, el({})), false);
   assert.equal(vdomEqual(el({}, [{ kind: 'text', text: 'x' }]), el({}, [])), false);
 });
+
+// Spec §3-4 (Q15): "같은 버전" = diff returns an empty list. Checked as: for many pairs, commit says 'same'
+// exactly when diff(current, new) is empty.
+test('"same version" is decided by the diff: commit says same exactly when diff returns nothing', async () => {
+  const { diff } = await import('../src/diff.js');
+  const li = (attrs, text) => ({ kind: 'element', tag: 'li', attrs, children: [{ kind: 'text', text }] });
+  const root = (...children) => ({ kind: 'element', tag: 'div', attrs: {}, children });
+  const cases = [
+    root(li({ key: 'a', class: 'x' }, '밥')),
+    root(li({ class: 'x', key: 'a' }, '밥')), // attribute order only
+    root(li({ key: 'b', class: 'x' }, '밥')), // key changed
+    root(li({ key: 'a', class: 'y' }, '밥')),
+    root(li({ key: 'a', class: 'x' }, '국')),
+    root(li({ key: 'a', class: 'x' }, '밥'), li({}, '국')),
+    root(),
+  ];
+  for (const a of cases) {
+    for (const b of cases) {
+      const h = createHistory(a);
+      assert.equal(h.commit(b).result === 'same', diff(a, b).length === 0, JSON.stringify([a, b]));
+    }
+  }
+  const h = createHistory(cases[0]);
+  assert.equal(h.commit(cases[1]).result, 'same');
+  assert.equal(h.commit(cases[2]).result, 'created');
+});

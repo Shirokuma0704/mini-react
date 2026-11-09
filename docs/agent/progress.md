@@ -19,10 +19,11 @@ this run by his choice; rows 2-9 are all "ahead" until he checks them.
 | 8 | PROVISIONAL diff/patch + wire Patch / back / forward + jsdom flow test (scope 8) | 2, 6 | 123/123 pass (test-run-11.log; flow = test/flow.test.js) | batch r1: OK | see git log | | jungle-notes/mini-react/Patch 흐름 (임시 diff·patch).md |
 | 9 | debug panel colored from the diff result (scope 6, spec §2-3) | 8 | 136/136 pass (test-run-12.log) | batch r1: quotes in attr values made 2 different attr sets look the same → JSON form, tested; r2 (fix-batch-r2.md): sample + debug fixes confirmed; lint still missed cut-off quoted values, foreignObject = HTML, SVG typos, raw-text cut-off; CSS test lacked min-width → all fixed + tested (8ed1189 follow-up); r3 (fix-batch-r3.md): OK | see git log | | jungle-notes/mini-react/디버그 칸.md |
 | 10 | REAL diff + patch (spec §3) + debug panel learns the 4 kinds + 실제 영역 drops keys | 8, 9 | 181/181 pass (test-run-17.log; diff 23, patch 10 incl. 400 random list pairs, debugView 14) | SKIPPED by 상철님 11-09 14:28 ("이번엔 생략") after the usage limit ("codex한도를 다써서 검증이 안되긴해"); tests + real-browser check only | see git log | | jungle-notes/mini-react/diff와 patch.md |
+| 11 | history "same version" = diff returned [] (spec §3-4 Q15) | 10 | 182/182 pass (test-run-18.log) | NOT RUN: usage limit (see row 10) | see git log | | jungle-notes/mini-react/히스토리 트리.md (one line added) |
 
-Next features (spec §3, after 10; one commit each): 11 history "same" = diff returned [] (§3-4) · 12 duplicate-key warning line (§3-3 Q14) · 13 samples with keys (§2-5).
+Next features (spec §3, after 10; one commit each): 12 duplicate-key warning line (§3-3 Q14) · 13 samples with keys (§2-5).
 
-Run of 11-09 after the diff grill: normal orchestrate stops again (the "끝까지 쭉" suspension was for the goal run only).
+Run of 11-09 after the diff grill: normal orchestrate stops again (the "끝까지 쭉" suspension was for the goal run only). 11-09 14:28 상철님 "11~13번 계속": rows 11-13 built back to back, one handoff at the end; Codex not run (usage limit).
 
 Order note: debug panel (scope 6) comes after diff/patch (scope 8) because it colors from the diff result.
 
@@ -45,7 +46,7 @@ Raw replies: docs/agent/codex/<feature>-r<round>.md (model gpt-6.1-sol, reasonin
 
 ## PROVISIONAL — RESOLVED by row 10 (11-09)
 - src/diff.js, src/patch.js replaced by the real ones (spec §3); test/diffPatch.test.js deleted (spec changed), replaced by test/diff.test.js + test/patch.test.js
-- src/history.js — still deep equality (now src/vdomEqual.js, re-exported); switch to "diff returned []" is feature 11
+- src/history.js — switched to "diff returned []" in row 11. NOTE: gives the same answer as deep equality for every input, so the row-11 test passed before the switch too (it pins the spec, it cannot catch the switch)
 - ~~OPEN QUESTION FOR HIM: change-list format~~ RESOLVED in the diff grill (§3-4 Q15 "전부 다 그대로"), refined in row 10 (see Open). Old text: change-list format `{ type, path, node? }` — path = child indexes from the root ([] = root, [1,0] = root.children[1].children[0]); only type 'replace' so far. Keep it, or decide it in the diff grill? Note: comments are dropped from the VDOM but never present in 실제 영역 either (it is always drawn from the VDOM), so VDOM index = DOM index there.
 
 ## Open disagreements / unsure spots
@@ -66,7 +67,7 @@ Raw replies: docs/agent/codex/<feature>-r<round>.md (model gpt-6.1-sol, reasonin
 - src/lint.js:8 — names with a dash = custom elements, never "unknown" (in HTML context) — me
 - src/lint.js:8 — crossed tags <b><i></b></i>: <i> unclosed at </b>, then </i> stray (2 warnings) — me
 - app.js — the warning line shows the first warning (by line) + "(외 N개)"; it updates on every keystroke, unlike the preview sync — me
-- src/history.js:14 — "equal" = deep VDOM equality (attr order ignored), not "diff returned nothing": the provisional diff always returns one change. Revisit after the diff grill — me
+- ~~src/history.js:14 — "equal" = deep VDOM equality~~ RESOLVED row 11: equal = diff returned nothing (§3-4) — me
 - src/history.js:43 — version labels v1, v2, … in creation order — me
 - src/history.js:53 — (임시 rule) arriving anywhere, including a tree click deep in a branch, marks every fork on its path as "last visited" toward it; forward goes one step along that — me
 - src/history.js — ancestors on one path are never equal to each other (commit refuses to create a duplicate of an ancestor), so "which equal ancestor" never needs a tie-break — me
