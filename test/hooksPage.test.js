@@ -185,3 +185,33 @@ test('no key attribute reaches the real DOM of the cards (§3-3 Q12)', async () 
   await press('todos', '앞에 추가');
   assert.equal(doc.querySelector('#todos [key]'), null);
 });
+
+test('input card (feature 21): typed text then "지우기" empties the box; the locked box goes back to 고정', async () => {
+  const { doc, press } = open();
+  const win = doc.defaultView;
+  const [follow, locked] = doc.querySelectorAll('#form input[type=text]');
+  assert.equal(follow.value, 'abc');
+  follow.value = '안녕';
+  follow.dispatchEvent(new win.Event('input', { bubbles: true }));
+  await settle();
+  assert.match(doc.getElementById('form').textContent, /state: "안녕"/);
+  await press('form', '지우기');
+  assert.equal(follow.value, '');
+  locked.value = '고정!!';
+  locked.dispatchEvent(new win.Event('input', { bubbles: true }));
+  await settle();
+  assert.equal(locked.value, '고정');
+});
+
+test('input card (feature 21): "했음" ticked then "전부 해제" unticks it; the locked checkbox stays unticked', async () => {
+  const { doc, press } = open();
+  const [done, locked] = doc.querySelectorAll('#form input[type=checkbox]');
+  done.click();
+  await settle();
+  assert.equal(done.checked, true);
+  await press('form', '전부 해제');
+  assert.equal(done.checked, false);
+  locked.click();
+  await settle();
+  assert.equal(locked.checked, false);
+});

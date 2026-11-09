@@ -116,6 +116,10 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .demo-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .demo .big { font: 600 28px/1 var(--mono); min-width: 2.5ch; margin-right: 6px; }
 .demo .muted { color: var(--muted); font-size: 13px; margin-left: auto; }
+.demo input[type=text] { font: 15px var(--mono); padding: 5px 8px; width: 12ch; border: 1px solid var(--line-strong); border-radius: 0; background: var(--bg); color: var(--text); }
+.demo input[type=text]:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.demo label { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; }
+.demo-row + .demo-row { margin-top: 8px; }
 .todo-list { margin: 10px 0 0; padding-left: 20px; }
 .demo .nums { margin: 10px 0 4px; font: 15px var(--mono); }
 .renders output.said { display: block; margin: 4px 0 0; font: 12px/1.5 var(--mono); white-space: pre-wrap; word-break: break-word; }

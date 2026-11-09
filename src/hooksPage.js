@@ -257,6 +257,29 @@ function mountRulesCard(doc) {
   box.appendChild(row);
 }
 
+// ---------- 입력칸 (spec §4-10: the box follows state; a box with no handler is locked) ----------
+function Form() {
+  const [text, setText] = useState('abc');
+  const [done, setDone] = useState(false);
+  return h('div', {}, [
+    h('div', { class: 'demo-row' }, [
+      h('input', { type: 'text', value: text, onInput: (e) => setText(e.target.value), 'aria-label': '따르는 칸' }),
+      h('button', { type: 'button', onClick: () => setText('') }, ['지우기']),
+      h('span', { class: 'muted' }, ['state: "', text, '"']),
+    ]),
+    h('div', { class: 'demo-row' }, [
+      h('input', { type: 'text', value: '고정', 'aria-label': '잠긴 칸' }),
+      h('span', { class: 'muted' }, ['onInput 없음 → 잠긴 칸']),
+    ]),
+    h('div', { class: 'demo-row' }, [
+      h('label', {}, [h('input', { type: 'checkbox', checked: done, onChange: (e) => setDone(e.target.checked) }), ' 했음']),
+      h('button', { type: 'button', onClick: () => setDone(false) }, ['전부 해제']),
+      h('label', {}, [h('input', { type: 'checkbox', checked: false }), ' 잠긴 체크']),
+      h('span', { class: 'muted' }, ['state: ', String(done)]),
+    ]),
+  ]);
+}
+
 // Options are for tests: a short tick, and a timer that starts paused (there is no unmount, so a running interval
 // would keep the test process alive).
 export function mountHooksPage(doc, { tickMs = 1000, timerStartsRunning = true } = {}) {
@@ -284,4 +307,5 @@ export function mountHooksPage(doc, { tickMs = 1000, timerStartsRunning = true }
   new FunctionComponent(countRenders(makeFilter(onCompute), byId('filter-renders'))).mount(byId('filter'));
 
   mountRulesCard(doc);
+  new FunctionComponent(countRenders(Form, byId('form-renders'))).mount(byId('form'));
 }

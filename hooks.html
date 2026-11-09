@@ -73,6 +73,16 @@
       <div id="rules" class="demo"></div>
       <p class="renders">라이브러리가 한 말 <output id="rules-out" class="said"></output></p>
     </section>
+    <section class="panel">
+      <h2>입력칸 <span class="hint">칸 글자의 주인은 state · 명세 4-10</span></h2>
+      <ul class="try">
+        <li>첫 칸: <code>value: text</code> + <code>onInput</code>. 아무거나 친 뒤 <b>지우기</b> → <code>setText('')</code></li>
+        <li>둘째 칸: <code>value: '고정'</code>, onInput 없음. 글자를 쳐 보세요</li>
+        <li><b>했음</b>을 체크한 뒤 <b>전부 해제</b> → <code>setDone(false)</code>. <b>잠긴 체크</b>도 눌러 보세요</li>
+      </ul>
+      <div id="form" class="demo"></div>
+      <p class="renders">그린 횟수 <output id="form-renders">0</output></p>
+    </section>
   </main>
 
   <script type="module" src="./src/hooksMain.js"></script>
