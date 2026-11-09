@@ -1,6 +1,7 @@
 // The verification page (spec-draft §2). mountApp wires behaviour onto index.html's elements.
 // Takes `doc` so the same code runs in a browser and on a jsdom document in tests.
 import { createSync } from './sync.js';
+import { lintHtml, warningLine } from './lint.js';
 
 export function mountApp(doc) {
   const els = {
@@ -19,8 +20,15 @@ export function mountApp(doc) {
     debugNew: doc.getElementById('debug-new'),
   };
 
+  // §2-1: warning line under the text box. Shown only, never blocks editing.
+  function updateWarning(text) {
+    const line = warningLine(lintHtml(text));
+    els.warning.textContent = line;
+    els.warning.classList.toggle('on', line !== '');
+  }
+
   // §2-1: text box <-> preview.
-  const sync = createSync({ source: els.source, preview: els.preview, doc });
+  const sync = createSync({ source: els.source, preview: els.preview, doc, onSourceChange: updateWarning });
 
   return { els, sync };
 }

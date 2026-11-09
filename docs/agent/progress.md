@@ -11,9 +11,9 @@ this run by his choice; rows 2-9 are all "ahead" until he checks them.
 |---|---------|------------|-------|-------|--------|-----|---------|
 | 1 | domToVdom: real DOM node → VDOM node (spec-draft §1) | — | 9/9 pass (test-run-3.log) | r1 (5.6-sol): 4 issues → 2 fixed, 1 to him, 1 process. r2 (6-astra): fixes confirmed; bookkeeping fixed; #2 resolved by him (keep whitespace) | see git log | ✔ 11-09 10:52 (printed real output for the spec example, compared with spec-draft §1: "내 의도랑 맞는거같아") | jungle-notes/mini-react/VDOM 변환.md |
 | 2 | render: VDOM → real DOM, VDOM → HTML text, html/container → root VDOM (goal scope 1) | 1 | 35/35 pass (test-run-5.log) | r1: 5 round-trip bugs (SVG, pre newline, \r, raw-text tags, merged text) → all fixed + tested; r2: r1 fixes confirmed; 4 more foreign-content/rare-tag cases → NOT fixed, in Open as disagreement; textarea test gap fixed | see git log | | jungle-notes/mini-react/렌더.md |
-| 3 | page layout + `npm start` static server (scope 2) | 2 | 46/46 pass (test-run-6.log) | r1: Windows case bypass (/NODE_MODULES/) → fixed + tested; r2: Windows stream alias (node_modules::$INDEX_ALLOCATION) → server now serves an allowlist (index.html, style.css, src/*.js), tested; r3 pending | see git log | | jungle-notes/mini-react/검증 페이지 뼈대.md |
-| 4 | text box ↔ preview sync (scope 3, spec §2-1) | 2, 3 | 65/65 pass (test-run-7.log) | r1: Shift-selection missed (anchor vs moving end) → fixed + tested; gaps (preview Enter, via mountApp) → tests added; r2 pending | see git log | | jungle-notes/mini-react/글자 칸과 미리보기.md |
-| 5 | broken-HTML warning (scope 4, spec §2-1) | 3 | | | | | |
+| 3 | page layout + `npm start` static server (scope 2) | 2 | 46/46 pass (test-run-6.log) | r1: Windows case bypass (/NODE_MODULES/) → fixed + tested; r2: Windows stream alias (node_modules::$INDEX_ALLOCATION) → server now serves an allowlist (index.html, style.css, src/*.js), tested; r3 FAILED: usage limit → PENDING | see git log | | jungle-notes/mini-react/검증 페이지 뼈대.md |
+| 4 | text box ↔ preview sync (scope 3, spec §2-1) | 2, 3 | 65/65 pass (test-run-7.log) | r1: Shift-selection missed (anchor vs moving end) → fixed + tested; gaps (preview Enter, via mountApp) → tests added; r2 FAILED: Codex usage limit (both 6.1-sol and 6-astra) until 16:39 → PENDING | see git log | | jungle-notes/mini-react/글자 칸과 미리보기.md |
+| 5 | broken-HTML warning (scope 4, spec §2-1) | 3 | 82/82 pass (test-run-8.log) | PENDING: Codex usage limit until 16:39 | see git log | | jungle-notes/mini-react/깨진 HTML 경고.md |
 | 6 | history tree (pure module) + tree view + move log (scope 5, spec §2-2) | 3 | | | | | |
 | 7 | samples 1/2 (scope 7, spec §2-4) | 3, 4 | | | | | |
 | 8 | PROVISIONAL diff/patch + wire Patch / back / forward + jsdom flow test (scope 8) | 2, 6 | | | | | |
@@ -22,6 +22,9 @@ this run by his choice; rows 2-9 are all "ahead" until he checks them.
 Order note: debug panel (scope 6) comes after diff/patch (scope 8) because it colors from the diff result.
 
 Ahead of his verification: 1 (stop suspended for this run, see above)
+
+## Codex usage limit (11-09 12:01)
+Both preferred models refused with "usage limit, try again at 4:39 PM". Not switched to a weaker model (skill §3). Every row marked PENDING needs its Codex round after 16:39.
 
 ## Codex replies
 Raw replies: docs/agent/codex/<feature>-r<round>.md (model gpt-6.1-sol, reasoning effort high, read-only sandbox).
@@ -41,6 +44,10 @@ Raw replies: docs/agent/codex/<feature>-r<round>.md (model gpt-6.1-sol, reasonin
 - src/sync.js:9 — "다른 글자를 건드릴 때 / 다른 곳을 건드리거나" read as: the caret moves (arrow keys, click) to another line of the text box / another DOM node of the preview, without typing. A caret move caused by typing (Enter) does not count — me
 - src/sync.js:11 — a side is copied over only if it was edited since the last sync, so clicking through the preview never overwrites broken text with the browser-repaired version. When the text box is broken, the preview shows the browser's repair — me
 - src/sync.js:13 — both directions go through the VDOM, so an HTML comment typed in the text box vanishes from the text box after the preview is edited (§1 drops comments) — me
+- src/lint.js:6 — every non-void tag must be closed, even <li>/<p> where HTML allows omitting the end tag (an IDE like WebStorm does not flag those) — me
+- src/lint.js:7 — names with a dash = custom elements, never "unknown"; SVG/MathML names are known — me
+- src/lint.js:8 — crossed tags <b><i></b></i>: <i> unclosed at </b>, then </i> stray (2 warnings) — me
+- app.js — the warning line shows the first warning (by line) + "(외 N개)"; it updates on every keystroke, unlike the preview sync — me
 - index.html — layout (two columns: 실제 영역 | 테스트 영역; below: history | debug; sticky control bar) is mine; spec §2-5 says shapes are decided after he sees it — me
 - server.js:12 — serves only index.html, style.css, src/*.js (allowlist after Codex r1+r2 found Windows name aliases); add a pattern if the page ever needs another file — me
 - server.js:62 — port 5173 (PORT env overrides), binds 127.0.0.1 only — me
