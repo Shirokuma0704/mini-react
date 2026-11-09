@@ -56,7 +56,7 @@ Raw replies: docs/agent/codex/<feature>-r<round>.md (model gpt-6.1-sol, reasonin
 - src/sync.js:13 — both directions go through the VDOM, so an HTML comment typed in the text box vanishes from the text box after the preview is edited (§1 drops comments) — me
 - src/lint.js:6 — every non-void tag must be closed, even <li>/<p> where HTML allows omitting the end tag (an IDE like WebStorm does not flag those) — me
 - src/lint.js:9 — inside <svg>/<math> names are checked against SVG 2 / MathML Core lists and "/>" closes; inside <foreignObject> it is HTML again; "/>" on an HTML non-void tag does not close it — Codex batch r1 + fix r2
-- src/lint.js:7 — names with a dash = custom elements, never "unknown"; SVG/MathML names are known — me
+- src/lint.js:8 — names with a dash = custom elements, never "unknown" (in HTML context) — me
 - src/lint.js:8 — crossed tags <b><i></b></i>: <i> unclosed at </b>, then </i> stray (2 warnings) — me
 - app.js — the warning line shows the first warning (by line) + "(외 N개)"; it updates on every keystroke, unlike the preview sync — me
 - src/history.js:14 — "equal" = deep VDOM equality (attr order ignored), not "diff returned nothing": the provisional diff always returns one change. Revisit after the diff grill — me
