@@ -4,6 +4,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { lintHtml, warningLine } from '../src/lint.js';
+import { JSDOM } from 'jsdom';
+import { htmlToVdom } from '../src/render.js';
 
 const kinds = (html) => lintHtml(html).map((w) => `${w.kind}:${w.tag}`);
 
@@ -134,4 +136,58 @@ test('top-level siblings (no parent tag) count as one list too', () => {
 
 test('warningLine shows the repeated key', () => {
   assert.equal(warningLine(lintHtml('<ul><li key="a">밥</li><li key="a">국</li></ul>')), '1번째 줄: 겹친 key "a" <li>');
+});
+
+// Codex bundle r1 F3 (11-09): the warning must agree with the keys the page really parses (htmlToVdom), so the key
+// is read the way HTML reads attributes: only a real attribute named key (not text inside another value), the
+// first one if repeated, and with character references decoded.
+// Orchestrator's choice: decimal/hex references and &amp; &lt; &gt; &quot; &apos; are decoded; other named
+// references are compared as written (a full named-reference table is out of scope).
+const pdoc = new JSDOM('<!DOCTYPE html><body></body>').window.document;
+const parsedDup = (html) => {
+  const keysOf = (n) => (n.children ?? []).filter((c) => c.kind === 'element' && 'key' in c.attrs).map((c) => c.attrs.key);
+  const walk = (n) => {
+    const ks = keysOf(n);
+    if (new Set(ks).size !== ks.length) return true;
+    return (n.children ?? []).some((c) => c.kind === 'element' && walk(c));
+  };
+  return walk(htmlToVdom(html, pdoc));
+};
+
+test('F3: keys written with character references are the same key as the plain text', () => {
+  for (const html of [
+    '<ul><li key="a">A</li><li key="&#97;">B</li></ul>',
+    '<ul><li key="a">A</li><li key="&#x61;">B</li></ul>',
+    '<ul><li key="&#X61;">A</li><li key=a>B</li></ul>',
+    '<ul><li key="x&y">A</li><li key="x&amp;y">B</li></ul>',
+    `<ul><li key='"q"'>A</li><li key="&quot;q&quot;">B</li></ul>`,
+    '<ul><li key="<">A</li><li key="&lt;">B</li></ul>',
+  ]) {
+    assert.equal(parsedDup(html), true, html);
+    assert.deepEqual(kinds(html), ['dupkey:li'], html);
+  }
+});
+
+test('F3: "key=…" written inside another attribute value is not a key', () => {
+  for (const html of [
+    '<ul><li title="x key=a y">A</li><li title="x key=a y">B</li></ul>',
+    `<ul><li title='key="a"'>A</li><li key="a">B</li></ul>`,
+    '<ul><li data-x="a key=b">A</li><li key="b">B</li></ul>',
+  ]) {
+    assert.equal(parsedDup(html), false, html);
+    assert.deepEqual(kinds(html), [], html);
+  }
+});
+
+test('F3: a repeated key attribute on one tag: the first one counts (as the HTML parser does)', () => {
+  const html = '<ul><li key="a" key="b">A</li><li key="b">B</li></ul>';
+  assert.equal(parsedDup(html), false);
+  assert.deepEqual(kinds(html), []);
+  const dup = '<ul><li key="a" key="b">A</li><li key="a">B</li></ul>';
+  assert.equal(parsedDup(dup), true);
+  assert.deepEqual(kinds(dup), ['dupkey:li']);
+});
+
+test('F3: the warning shows the decoded key', () => {
+  assert.equal(lintHtml('<ul><li key="a">A</li><li key="&#97;">B</li></ul>')[0].key, 'a');
 });

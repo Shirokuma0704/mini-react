@@ -10,6 +10,8 @@
 //   it is HTML again, where "/>" closes only void tags (the parser ignores it on <div/>) — Codex batch r1, fix r2
 // - an opening tag cut off at the end ("<div", '<div title="x') counts as unclosed
 // - crossed tags `<b><i></b></i>`: at </b>, <i> is reported unclosed; the later </i> is then stray
+// - the key is read like an HTML attribute (tokenized, first one wins, decimal/hex and &amp; &lt; &gt; &quot; &apos;
+//   decoded, other named references left as written)
 // - spec §3-3 Q14: a key repeated among siblings (same parent, or both at the top) is warned on the repeating tag
 
 const VOID = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr']);
@@ -62,13 +64,28 @@ function contextOf(stack) {
   return 'html';
 }
 
-// The value of a "key" attribute in a tag's attribute text, or null. Attribute names are case-insensitive in HTML;
-// a bare `key` means key="".
-const KEY_ATTR = /(?:^|\s)key(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?(?=[\s/]|$)/i;
+// Character references in an attribute value: decimal, hex, and the five named ones below. Other named references stay
+// as written (a full table is out of scope).
+const NAMED = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" };
+function decode(value) {
+  return value.replace(/&(?:#(\d+)|#[xX]([0-9a-fA-F]+)|(amp|lt|gt|quot|apos));/g, (whole, dec, hex, name) => {
+    if (name) return NAMED[name];
+    const code = dec !== undefined ? parseInt(dec, 10) : parseInt(hex, 16);
+    return code > 0 && code <= 0x10ffff && !(code >= 0xd800 && code <= 0xdfff) ? String.fromCodePoint(code) : whole;
+  });
+}
+
+// The decoded value of the "key" attribute in a tag's attribute text, or null. Walks name / optional = value pairs the
+// way the HTML parser does: values are "double", 'single' or unquoted (up to whitespace or >); names are
+// case-insensitive; the FIRST key attribute counts; a bare `key` means "".
+const ATTR = /([^\s"'>/=]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]*)))?/g;
 function keyIn(attrText) {
-  const m = KEY_ATTR.exec(attrText);
-  if (!m) return null;
-  return m[1] ?? m[2] ?? m[3] ?? '';
+  ATTR.lastIndex = 0;
+  let m;
+  while ((m = ATTR.exec(attrText)) !== null) {
+    if (m[1].toLowerCase() === 'key') return decode(m[2] ?? m[3] ?? m[4] ?? '');
+  }
+  return null;
 }
 
 function isKnown(tag, context) {
