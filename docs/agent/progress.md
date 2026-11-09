@@ -23,6 +23,22 @@ this run by his choice; rows 2-9 are all "ahead" until he checks them.
 | 12 | duplicate-key warning line (spec §3-3 Q14) | 5 | 189/189 pass (test-run-20.log) | NOT RUN: usage limit | see git log | ✔ 11-09 14:50 (hand-checked on the page: empty text box → Patch, keyed reorder, unkeyed insert in sample 2, duplicate key, back/forward, "nothing changed" → no version; expected written first; "다 써봤어") | jungle-notes/mini-react/깨진 HTML 경고.md (one line added) |
 | 13 | sample 1's list gets keys (spec §2-5 "key를 넣은 샘플"); page tests read 실제 영역 without keys | 7, 10 | 193/193 pass (test-run-21.log) | NOT RUN: usage limit | see git log | ✔ 11-09 14:50 (hand-checked on the page: empty text box → Patch, keyed reorder, unkeyed insert in sample 2, duplicate key, back/forward, "nothing changed" → no version; expected written first; "다 써봤어") | jungle-notes/mini-react/샘플.md (one line added) |
 
+### Phase 2 (spec-draft §4, grilled 11-09 afternoon, ended 16:19)
+
+Run started 11-09 ~16:30 in a fork session. Role split (his decision 11-09, orchestrate §1): Opus writes each feature's tests first, a Sonnet worker implements to pass them (may not edit tests), Opus reruns tests + reviews the diff, Codex verifies when the usage limit allows. Normal stops (handoff per feature, 15-min timer, max 3 ahead). He chose (11-09 "응, 페이지도") to add a small hooks check page; it grows with each feature from 16 so he can check on a page.
+
+| # | Feature | Depends on | Tests | Codex | Commit | Him | Why doc |
+|---|---------|------------|-------|-------|--------|-----|---------|
+| 14 | h() → VDOM, h(Component, props) → component node, expand() before diff, on… → events slot (§4-1, §4-8) | Phase 1 | 223/223 pass (test-run-22.log; h.test.js 30, written by Opus first; impl by Sonnet worker, only src/h.js) | NOT RUN: usage limit until 17:11 (16:25 attempt, gpt-6.1-sol refused). Prompt kept for a batch run later | see git log | | jungle-notes/mini-react/h 함수와 컴포넌트 펼치기.md |
+| 15 | events: relay attached once, handler pointer swapped on re-render (§4-2) | 14 | | | | | |
+| 16 | FunctionComponent + mount()/update() + useState (call order, cursor reset, value or updater, skip same value) + check page (counter) (§4-3, §4-4) | 14, 15 | | | | | |
+| 17 | batching: many set calls → one render in a microtask (§4-4) | 16 | | | | | |
+| 18 | useEffect: after patch, cleanup, deps (§4-5) | 16 | | | | | |
+| 19 | useMemo: computed in place, deps (§4-6) | 16 | | | | | |
+| 20 | hook rules: count differs → error, order differs → warn, child calls a hook → error (§4-3, §4-7) | 16, 18, 19 | | | | | |
+
+18 and 19 are independent of each other; everything else is a chain.
+
 Rows 11-13 browser check (11-09, Claude app built-in browser, script-driven): sample 1 → move the 3rd li to the front → Patch → 실제 영역 has no key attribute, the moved li is the same element, all li reused, debug shows it yellow; typing duplicate keys → warning line "1번째 줄: 겹친 key "a" <li>".
 
 Run of 11-09 after the diff grill: normal orchestrate stops again (the "끝까지 쭉" suspension was for the goal run only). 11-09 14:28 상철님 "11~13번 계속": rows 11-13 built back to back, one handoff at the end; Codex not run (usage limit).
@@ -53,6 +69,11 @@ Raw replies: docs/agent/codex/<feature>-r<round>.md (model gpt-6.1-sol, reasonin
 
 ## Open disagreements / unsure spots
 <!-- file:line — what — who raised it (me / Codex) -->
+- src/h.js:39 — a prop counts as an event only if it matches /^on[A-Z]/ (onClick); "onclick"/"online" stay attributes. An on[A-Z] prop that is not a function is dropped (neither events nor attrs) — Sonnet worker
+- src/h.js:28 — component props copied shallowly; props.children only when a children argument was given — Sonnet worker
+- src/h.js:63 — expand() of a top-level component that returns null gives null (the mount step must handle it); components returning arrays are not supported — Sonnet worker
+- src/h.js:15 — any child that is not array/string/number/null/undefined/boolean is pushed as a VDOM node without checking — Sonnet worker
+- PHASE 2 — spec §4-8 lists 5 AI candidates that 상철님 ACCEPTED WITHOUT DECIDING ("React를 모르니깐 … 논리적으로 허점도없고"): unroll components before diff, on… names → events slot, useMemo without deps = every render, re-render from the root, mount(container). Treat them as his-accepted-not-decided: if one causes trouble, raise it with him first — me
 - ~~whitespace~~ RESOLVED 11-06: 상철님 "그대로 두기" → spec-draft §1 rule added, test added. Whitespace-only text between tags is therefore kept too — Codex r1 #2
 - ~~comments~~ RESOLVED 11-09: 상철님 "개발용인데 굳이 보낼 필요가 없잖아" → drop comments (src/domToVdom.js return null), spec-draft §1 rule added. Carry to the patch spec: VDOM child index ≠ real DOM childNodes index when a comment sits in between — me
 - tag names: lowercase via localName (spec example uses `p`); SVG keeps case — me
