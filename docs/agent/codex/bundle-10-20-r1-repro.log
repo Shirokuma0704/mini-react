@@ -1,0 +1,194 @@
+hook order changed: slot 0 was "state" but is now "memo"
+✖ #1 effect booked by a rejected (child-hook) render must not run later (4.4788ms)
+hook order changed: slot 0 was "memo" but is now "state"
+changes [{"t":"update","w":"move","p":[0,0],"o":[0,1]},{"t":"replace","p":[0,0],"o":[0,1]}]
+oldB chg newP chg
+live 2 cleans 0
+{ keyed: 3, unkeyed: 1604, sharedPairs: 0, moves: 0 }
+✖ #2 after a count error, the committed state slot and its setter still work (4.0217ms)
+✖ #3a lint: key="a" and key="&#97;" are the same parsed key → duplicate warning (4.8117ms)
+✖ #3b lint: "key=a" inside a title value is not a key (0.5883ms)
+✖ #4 debug colors: move + replace at the same key → old red, new green (1.9213ms)
+✖ #5 kind swap (state,effect → effect,state): old effect cleaned up, live count stays 1 (0.4712ms)
+✖ #6 patch.test random generator: how many keyed nodes / shared keys / moves (76.0556ms)
+runs 3
+✖ #8 (note) set(1); fc.update() → booked microtask renders again (2.8255ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 0
+ℹ fail 8
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1416.1527
+
+✖ failing tests:
+
+test at docs\agent\codex\bundle-10-20-r1-repro.mjs:17:1
+✖ #1 effect booked by a rejected (child-hook) render must not run later (4.4788ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+      'run 0',
+  +   'clean 0',
+  +   'run 1'
+    ]
+  
+      at TestContext.<anonymous> (file:///C:/Users/Beak/Desktop/Jungle/Week11%7E12/mini-react/docs/agent/codex/bundle-10-20-r1-repro.mjs:32:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at Test.start (node:internal/test_runner/test:1257:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'run 0', 'clean 0', 'run 1' ],
+    expected: [ 'run 0' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at docs\agent\codex\bundle-10-20-r1-repro.mjs:35:1
+✖ #2 after a count error, the committed state slot and its setter still work (4.0217ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  '0' !== '8'
+  
+      at TestContext.<anonymous> (file:///C:/Users/Beak/Desktop/Jungle/Week11%7E12/mini-react/docs/agent/codex/bundle-10-20-r1-repro.mjs:52:10)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '0',
+    expected: '8',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at docs\agent\codex\bundle-10-20-r1-repro.mjs:55:1
+✖ #3a lint: key="a" and key="&#97;" are the same parsed key → duplicate warning (4.8117ms)
+  AssertionError [ERR_ASSERTION]: []
+      at TestContext.<anonymous> (file:///C:/Users/Beak/Desktop/Jungle/Week11%7E12/mini-react/docs/agent/codex/bundle-10-20-r1-repro.mjs:59:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:969:18)
+      at Test.postRun (node:internal/test_runner/test:1537:19)
+      at Test.run (node:internal/test_runner/test:1462:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at docs\agent\codex\bundle-10-20-r1-repro.mjs:62:1
+✖ #3b lint: "key=a" inside a title value is not a key (0.5883ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   {
+  +     key: 'a',
+  +     kind: 'dupkey',
+  +     line: 1,
+  +     tag: 'li'
+  +   }
+  + ]
+  - []
+  
+      at TestContext.<anonymous> (file:///C:/Users/Beak/Desktop/Jungle/Week11%7E12/mini-react/docs/agent/codex/bundle-10-20-r1-repro.mjs:64:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:969:18)
+      at Test.postRun (node:internal/test_runner/test:1537:19)
+      at Test.run (node:internal/test_runner/test:1462:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ { kind: 'dupkey', tag: 'li', key: 'a', line: 1 } ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at docs\agent\codex\bundle-10-20-r1-repro.mjs:67:1
+✖ #4 debug colors: move + replace at the same key → old red, new green (1.9213ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  'chg' !== 'del'
+  
+      at TestContext.<anonymous> (file:///C:/Users/Beak/Desktop/Jungle/Week11%7E12/mini-react/docs/agent/codex/bundle-10-20-r1-repro.mjs:75:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:969:18)
+      at Test.postRun (node:internal/test_runner/test:1537:19)
+      at Test.run (node:internal/test_runner/test:1462:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'chg',
+    expected: 'del',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at docs\agent\codex\bundle-10-20-r1-repro.mjs:79:1
+✖ #5 kind swap (state,effect → effect,state): old effect cleaned up, live count stays 1 (0.4712ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  2 !== 1
+  
+      at TestContext.<anonymous> (file:///C:/Users/Beak/Desktop/Jungle/Week11%7E12/mini-react/docs/agent/codex/bundle-10-20-r1-repro.mjs:92:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:969:18)
+      at Test.postRun (node:internal/test_runner/test:1537:19)
+      at Test.run (node:internal/test_runner/test:1462:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at docs\agent\codex\bundle-10-20-r1-repro.mjs:95:1
+✖ #6 patch.test random generator: how many keyed nodes / shared keys / moves (76.0556ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(moves > 0)
+  
+      at TestContext.<anonymous> (file:///C:/Users/Beak/Desktop/Jungle/Week11%7E12/mini-react/docs/agent/codex/bundle-10-20-r1-repro.mjs:115:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:969:18)
+      at Test.postRun (node:internal/test_runner/test:1537:19)
+      at Test.run (node:internal/test_runner/test:1462:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at docs\agent\codex\bundle-10-20-r1-repro.mjs:118:1
+✖ #8 (note) set(1); fc.update() → booked microtask renders again (2.8255ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  3 !== 2
+  
+      at TestContext.<anonymous> (file:///C:/Users/Beak/Desktop/Jungle/Week11%7E12/mini-react/docs/agent/codex/bundle-10-20-r1-repro.mjs:124:10)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 3,
+    expected: 2,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
