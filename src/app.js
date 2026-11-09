@@ -48,13 +48,14 @@ export function mountApp(doc) {
   // §2-1: text box <-> preview.
   const sync = createSync({ source: els.source, preview: els.preview, doc, onSourceChange: updateWarning });
 
-  // §2-4: sample buttons fill the text box only; 실제 영역 and history stay until Patch.
+  // §2-4: sample buttons fill the test area (text box + its preview, 상철님 11-09 "미리보기도 같이");
+  // 실제 영역 and history stay until Patch.
   for (const sample of SAMPLES) {
     const btn = doc.createElement('button');
     btn.type = 'button';
     btn.textContent = sample.name;
     btn.addEventListener('click', () => {
-      sync.fillSourceOnly(sample.html);
+      sync.setSource(sample.html);
       say(`글자 칸에 ${sample.name} 내용을 넣었어요. Patch를 눌러야 새 버전이 돼요.`);
     });
     els.samples.appendChild(btn);

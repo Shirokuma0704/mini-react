@@ -62,7 +62,7 @@ test('Patch with nothing changed makes no version and says so (§2-2)', () => {
   assert.match(p.$('status').textContent, /바뀐 게 없어요/);
 });
 
-test('sample 2 button fills only the text box (§2-4); Patch then makes v2', () => {
+test('sample 2 button fills the test area only (§2-4); Patch then makes v2', () => {
   const p = page();
   const btn = [...p.$('samples').querySelectorAll('button')].find((b) => b.textContent === '샘플 2');
   btn.click();

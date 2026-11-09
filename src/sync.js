@@ -87,7 +87,8 @@ export function createSync({ source, preview, doc, onSourceChange = () => {} }) 
     previewSpot = null;
   });
 
-  // Put new text in the text box and draw it in the preview (history moves: the test area changes as a whole).
+  // Put new text in the text box and draw it in the preview: the test area changes as a whole
+  // (sample buttons, history moves). Unsynced edits on either side are dropped, the new text replaces them.
   function setSource(html) {
     source.value = html;
     sourceDirty = false;
@@ -97,16 +98,5 @@ export function createSync({ source, preview, doc, onSourceChange = () => {} }) 
     onSourceChange(source.value);
   }
 
-  // Put new text in the text box ONLY (§2-4 sample buttons: "글자 칸만 채운다"). It counts as an edit of the
-  // text box, so the preview follows by the usual §2-1 rule (another spot / leaving the text box) or on flush (Patch).
-  // A pending preview edit is dropped: the sample replaces the whole text anyway.
-  function fillSourceOnly(html) {
-    source.value = html;
-    previewDirty = false;
-    sourceDirty = true;
-    sourceSpot = null;
-    onSourceChange(source.value);
-  }
-
-  return { flush, setSource, fillSourceOnly };
+  return { flush, setSource };
 }
