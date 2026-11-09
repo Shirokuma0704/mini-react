@@ -2,10 +2,10 @@
 
 Framework: `~/.claude/skills/orchestrate/SKILL.md`. These lines only add what is specific to this project.
 Keep each rule one line. Delete rules that stop being true, in the same commit as the code change.
-This folder is a **trial run** of the framework (11-06), not his real mini React build.
+This is his real mini React build (from 11-09), grown from the 11-06 trial run (../trial-vdom kept as the record).
 
 ## Specs
-- Spec: ../spec-draft.md section 1 (VDOM node) only
+- Spec: ../spec-draft.md — section 1 (VDOM node) built; grill the rest before building
 - Framework decisions: ../agent-framework-spec.md
 
 ## Commands
@@ -18,5 +18,5 @@ This folder is a **trial run** of the framework (11-06), not his real mini React
 - Friction log: ../friction-log.md
 
 ## Git
-- Local repo only, no remote, no push. Personal → no co-author trailer.
+- Public personal repo github.com/Shirokuma0704/mini-react (portfolio). Commit to master and push; Korean messages; no co-author trailer.
 - One feature = one commit.
