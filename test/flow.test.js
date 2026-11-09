@@ -157,3 +157,13 @@ test('debug panel is untouched when Patch finds nothing changed', () => {
   p.$('patch').click();
   assert.equal(p.$('debug-new').innerHTML, before);
 });
+
+test('status line: new version, and the move to an equal ancestor, are both announced', () => {
+  const p = page();
+  p.edit('<p>x</p>');
+  p.$('patch').click();
+  assert.equal(p.$('status').textContent, '새 버전 v2 만들었어요.');
+  p.edit(SAMPLES[0].html);
+  p.$('patch').click();
+  assert.match(p.$('status').textContent, /옮겨 갔어요 → v1$/);
+});

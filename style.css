@@ -85,11 +85,12 @@ button {
 button:hover:not(:disabled) { background: var(--bg-2); }
 button:disabled { opacity: 0.45; cursor: default; }
 button.primary { background: var(--text); color: var(--bg); border-color: var(--text); }
+button.primary:hover:not(:disabled) { background: var(--text); opacity: 0.85; }
 button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 .areas, .lower {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 16px;
 }
 .lower { margin-top: 16px; }
@@ -146,7 +147,8 @@ textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
 
 .movelog { margin: 0; font: 12px/1.7 var(--mono); color: var(--muted); word-break: break-all; }
 
-.debug { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.debug { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+.debug > div { min-width: 0; }
 .code {
   margin: 0;
   min-height: 120px;

@@ -55,7 +55,7 @@ export function mountApp(doc) {
     btn.textContent = sample.name;
     btn.addEventListener('click', () => {
       sync.setSource(sample.html);
-      say(`${sample.name}을 글자 칸에 넣었어요. Patch를 눌러야 새 버전이 돼요.`);
+      say(`글자 칸에 ${sample.name} 내용을 넣었어요. Patch를 눌러야 새 버전이 돼요.`);
     });
     els.samples.appendChild(btn);
   }
@@ -99,8 +99,8 @@ export function mountApp(doc) {
     apply(before.vdom, r.node.vdom);
     say(
       r.result === 'created'
-        ? `${r.node.label}을 만들었어요.`
-        : `같은 갈래의 ${r.node.label}과 내용이 같아서, 새로 만들지 않고 ${r.node.label}로 옮겨 갔어요.`,
+        ? `새 버전 ${r.node.label} 만들었어요.`
+        : `같은 갈래에 내용이 같은 버전이 있어서, 새로 만들지 않고 옮겨 갔어요 → ${r.node.label}`,
     );
     refresh();
     return r;

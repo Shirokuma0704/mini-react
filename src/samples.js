@@ -32,7 +32,7 @@ export const SAMPLES = [
     </li>
     <li>바뀐 곳만 <em>patch</em>하기</li>
   </ol>
-  <img src="data:," alt="빈 그림" width="40" height="20">
+  <hr class="divider">
   <p>끝<br>다음은 hooks</p>
 </article>`,
   },

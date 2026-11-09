@@ -23,6 +23,9 @@ Order note: debug panel (scope 6) comes after diff/patch (scope 8) because it co
 
 Ahead of his verification: 8 (rows 2-9; stop suspended for this run, see above)
 
+## Real-browser check (11-09 ~12:10, Claude app built-in browser, Chromium, dark mode, npm start)
+Typed with the keyboard: text box edit on line 2 → no sync while on the line → ArrowDown → preview updated; Patch → 실제 영역 h2 changed, log v1 → v2, debug lines colored; back → 실제 영역 + text box + preview = v1; forward → v2, log v1 → v2 → v1 → v2. Preview typing → click another li → text box updated. Sample 2 → Patch → v2. No console errors. Found and fixed: debug panel overflowing the page width (grid min-width), Patch button text invisible on hover in dark mode, broken-image icon in sample 2 (img → hr), Korean particles in status lines (v2을 → 새 버전 v2). Not checked: Firefox/Safari, light mode, IME composition (Korean typing) events in the preview.
+
 ## Codex usage limit (11-09 12:01)
 Both preferred models refused with "usage limit, try again at 4:39 PM". Not switched to a weaker model (skill §3). Every row marked PENDING needs its Codex round after 16:39.
 
@@ -57,7 +60,7 @@ Raw replies: docs/agent/codex/<feature>-r<round>.md (model gpt-6.1-sol, reasonin
 - src/history.js:53 — (임시 rule) arriving anywhere, including a tree click deep in a branch, marks every fork on its path as "last visited" toward it; forward goes one step along that — me
 - src/history.js — ancestors on one path are never equal to each other (commit refuses to create a duplicate of an ancestor), so "which equal ancestor" never needs a tie-break — me
 - src/treeView.js — tree drawn as nested lists with buttons; current = filled, path to root = outlined; shape left open by §2-5 — me
-- src/samples.js — SAMPLE CONTENT IS MINE, NOT HIS (§2-5 left it open): todo card (ul with data-id/class, b inside li, a href/title) and a post (header, ol with a nested ul, code/em, img, br). Chosen to give the 5 diff cases something to bite; replace freely — me
+- src/samples.js — SAMPLE CONTENT IS MINE, NOT HIS (§2-5 left it open): todo card (ul with data-id/class, b inside li, a href/title) and a post (header, ol with a nested ul, code/em, hr, br). Chosen to give the 5 diff cases something to bite; replace freely — me
 - src/app.js — load = sample 1 drawn into 실제 영역 first, then v1 = containerToVdom(실제 영역), then the test area is drawn from v1 (follows the assignment order "실제 영역의 샘플 HTML → VDOM → 테스트 영역") — me
 - src/app.js:80 — Patch never rewrites the text box (the user's text stays, comments included); back/forward/tree click rewrite the text box and preview from the version's VDOM — me
 - src/app.js:80 — when Patch moves to an equal ancestor (§2-2), 실제 영역 is patched to that version too — me
