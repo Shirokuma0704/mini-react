@@ -315,7 +315,7 @@ test('Phase 1 drawing (HTML text → preview) does not lock inputs: §4-10 is ab
   assert.equal(box.checked, true);
 });
 
-// ---------- real-browser event timing (found 11-09 19:50 in the Claude app browser, not by jsdom) ----------
+// ---------- real-browser event timing (found 11-09 between 19:07 and 19:16 in the Claude app browser, not by jsdom) ----------
 // A real click on a checkbox (or a real pick in a select) fires "input" and then "change" from the browser itself, and
 // the browser runs all pending microtasks between the two (the JS stack is empty after each listener). dispatchEvent and
 // el.click() from a test do NOT do that, which is why the tests above missed it: the restore ran between "input" and
