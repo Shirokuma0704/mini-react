@@ -120,3 +120,40 @@ test('broken HTML shows the warning line and does not block Patch', () => {
   p.edit('<p>fine</p>');
   assert.equal(p.$('warning').textContent, '');
 });
+
+// Goal scope 6 / §2-3: debug panel shows old vs new side by side, colored from the diff RESULT.
+test('debug panel after Patch: old side = previous version, new side = new one, colored from the diff', () => {
+  const p = page();
+  p.edit('<p>x</p>');
+  p.$('patch').click();
+  const newLines = [...p.$('debug-new').querySelectorAll('.line')];
+  assert.deepEqual(newLines.map((l) => l.textContent), ['<p>', '  "x"', '</p>']);
+  assert.ok(newLines.every((l) => l.classList.contains('add')));
+  const oldLines = [...p.$('debug-old').querySelectorAll('.line')];
+  assert.equal(oldLines[0].textContent, '<section class="card" id="todo">');
+  assert.ok(oldLines.every((l) => l.classList.contains('del')));
+});
+
+test('debug panel follows back/forward too (old = where we were, new = where we went)', () => {
+  const p = page();
+  p.edit('<p>x</p>');
+  p.$('patch').click();
+  p.$('back').click();
+  assert.equal(p.$('debug-old').querySelector('.line').textContent, '<p>');
+  assert.equal(p.$('debug-new').querySelector('.line').textContent, '<section class="card" id="todo">');
+});
+
+test('debug panel on load: nothing on the old side, v1 uncolored on the new side', () => {
+  const p = page();
+  assert.equal(p.$('debug-old').querySelectorAll('.line').length, 0);
+  const lines = [...p.$('debug-new').querySelectorAll('.line')];
+  assert.equal(lines[0].textContent, '<section class="card" id="todo">');
+  assert.ok(lines.every((l) => l.className === 'line'));
+});
+
+test('debug panel is untouched when Patch finds nothing changed', () => {
+  const p = page();
+  const before = p.$('debug-new').innerHTML;
+  p.$('patch').click();
+  assert.equal(p.$('debug-new').innerHTML, before);
+});

@@ -13,6 +13,9 @@ import { htmlToVdom, containerToVdom, renderInto, rootToHtml } from './render.js
 import { SAMPLES } from './samples.js';
 import { diff } from './diff.js'; // PROVISIONAL
 import { patch } from './patch.js'; // PROVISIONAL
+import { debugLines, renderDebug } from './debugView.js';
+
+const EMPTY_ROOT = { kind: 'element', tag: 'div', attrs: {}, children: [] };
 
 export function mountApp(doc) {
   const els = {
@@ -69,10 +72,17 @@ export function mountApp(doc) {
     els.forward.disabled = !history.canForward();
   }
 
-  // diff the two versions and patch 실제 영역 with the result.
+  // §2-3: debug panel, old vs new side by side, colored from the diff RESULT (never from comparing them here).
+  function showDebug(oldRoot, newRoot, changes) {
+    renderDebug(els.debugOld, debugLines(oldRoot, changes, 'old'), doc);
+    renderDebug(els.debugNew, debugLines(newRoot, changes, 'new'), doc);
+  }
+
+  // diff the two versions, patch 실제 영역 with the result, and show the same result in the debug panel.
   function apply(fromRoot, toRoot) {
     const changes = diff(fromRoot, toRoot);
     patch(els.actual, changes, doc);
+    showDebug(fromRoot, toRoot, changes);
     return changes;
   }
 
@@ -122,6 +132,7 @@ export function mountApp(doc) {
   els.back.addEventListener('click', back);
   els.forward.addEventListener('click', forward);
 
+  showDebug(EMPTY_ROOT, history.current().vdom, []);
   refresh();
   say(`${history.current().label}: 실제 영역의 샘플 1에서 시작했어요.`);
 

@@ -17,11 +17,11 @@ this run by his choice; rows 2-9 are all "ahead" until he checks them.
 | 6 | history tree (pure module) + tree view + move log (scope 5, spec §2-2) | 3 | 103/103 pass (test-run-9.log) | PENDING: Codex usage limit until 16:39 | see git log | | jungle-notes/mini-react/히스토리 트리.md |
 | 7 | samples 1/2 (scope 7, spec §2-4) | 3, 4 | 111/111 pass (test-run-10.log) | PENDING: Codex usage limit until 16:39 | see git log | | jungle-notes/mini-react/샘플.md |
 | 8 | PROVISIONAL diff/patch + wire Patch / back / forward + jsdom flow test (scope 8) | 2, 6 | 123/123 pass (test-run-11.log; flow = test/flow.test.js) | PENDING: Codex usage limit until 16:39 | see git log | | jungle-notes/mini-react/Patch 흐름 (임시 diff·patch).md |
-| 9 | debug panel colored from the diff result (scope 6, spec §2-3) | 8 | | | | | |
+| 9 | debug panel colored from the diff result (scope 6, spec §2-3) | 8 | 136/136 pass (test-run-12.log) | PENDING: Codex usage limit until 16:39 | see git log | | jungle-notes/mini-react/디버그 칸.md |
 
 Order note: debug panel (scope 6) comes after diff/patch (scope 8) because it colors from the diff result.
 
-Ahead of his verification: 1 (stop suspended for this run, see above)
+Ahead of his verification: 8 (rows 2-9; stop suspended for this run, see above)
 
 ## Codex usage limit (11-09 12:01)
 Both preferred models refused with "usage limit, try again at 4:39 PM". Not switched to a weaker model (skill §3). Every row marked PENDING needs its Codex round after 16:39.
@@ -61,6 +61,9 @@ Raw replies: docs/agent/codex/<feature>-r<round>.md (model gpt-6.1-sol, reasonin
 - src/app.js — load = sample 1 drawn into 실제 영역 first, then v1 = containerToVdom(실제 영역), then the test area is drawn from v1 (follows the assignment order "실제 영역의 샘플 HTML → VDOM → 테스트 영역") — me
 - src/app.js:80 — Patch never rewrites the text box (the user's text stays, comments included); back/forward/tree click rewrite the text box and preview from the version's VDOM — me
 - src/app.js:80 — when Patch moves to an equal ancestor (§2-2), 실제 영역 is patched to that version too — me
+- src/debugView.js — one line per open tag / text / close tag, text shown in JSON form so spaces and 
+ are visible; colors: replace → old side del (red), new side add (green); any other change type → chg (yellow) on both sides until the real diff defines it. With the provisional diff every line is always colored — me
+- src/app.js — debug panel on load: old side empty, new side = v1 uncolored; it also updates on back/forward/tree click (old = where we were). Patch with nothing changed leaves it as it was — me
 - index.html — layout (two columns: 실제 영역 | 테스트 영역; below: history | debug; sticky control bar) is mine; spec §2-5 says shapes are decided after he sees it — me
 - server.js:12 — serves only index.html, style.css, src/*.js (allowlist after Codex r1+r2 found Windows name aliases); add a pattern if the page ever needs another file — me
 - server.js:62 — port 5173 (PORT env overrides), binds 127.0.0.1 only — me
