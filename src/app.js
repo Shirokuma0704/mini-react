@@ -4,7 +4,8 @@ import { createSync } from './sync.js';
 import { lintHtml, warningLine } from './lint.js';
 import { createHistory } from './history.js';
 import { renderTree, logText } from './treeView.js';
-import { containerToVdom } from './render.js';
+import { htmlToVdom, containerToVdom, renderInto, rootToHtml } from './render.js';
+import { SAMPLES } from './samples.js';
 
 export function mountApp(doc) {
   const els = {
@@ -33,8 +34,26 @@ export function mountApp(doc) {
   // §2-1: text box <-> preview.
   const sync = createSync({ source: els.source, preview: els.preview, doc, onSourceChange: updateWarning });
 
-  // §2-2: history starts from what 실제 영역 holds (spec §2: "로드하면 실제 영역의 샘플 HTML → VDOM").
+  function say(text) {
+    els.status.textContent = text;
+  }
+
+  // §2-4: sample buttons fill the text box only; 실제 영역 and history stay until Patch.
+  for (const sample of SAMPLES) {
+    const btn = doc.createElement('button');
+    btn.type = 'button';
+    btn.textContent = sample.name;
+    btn.addEventListener('click', () => {
+      sync.setSource(sample.html);
+      say(`${sample.name}을 글자 칸에 넣었어요. Patch를 눌러야 새 버전이 돼요.`);
+    });
+    els.samples.appendChild(btn);
+  }
+
+  // Load (spec §2): sample HTML in 실제 영역 → VDOM (v1) → test area. §2-4: "처음 열면 샘플 1이 들어 있다".
+  renderInto(els.actual, htmlToVdom(SAMPLES[0].html, doc), doc);
   const history = createHistory(containerToVdom(els.actual));
+  sync.setSource(rootToHtml(history.current().vdom));
 
   function refresh() {
     renderTree(els.tree, history, doc, () => {}); // clicking a version is wired with the moves (back/forward)
@@ -44,6 +63,7 @@ export function mountApp(doc) {
   }
 
   refresh();
+  say(`${history.current().label}: 실제 영역의 샘플 1에서 시작했어요.`);
 
   return { els, sync, history };
 }

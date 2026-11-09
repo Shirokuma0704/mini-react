@@ -15,7 +15,7 @@ this run by his choice; rows 2-9 are all "ahead" until he checks them.
 | 4 | text box ↔ preview sync (scope 3, spec §2-1) | 2, 3 | 65/65 pass (test-run-7.log) | r1: Shift-selection missed (anchor vs moving end) → fixed + tested; gaps (preview Enter, via mountApp) → tests added; r2 FAILED: Codex usage limit (both 6.1-sol and 6-astra) until 16:39 → PENDING | see git log | | jungle-notes/mini-react/글자 칸과 미리보기.md |
 | 5 | broken-HTML warning (scope 4, spec §2-1) | 3 | 82/82 pass (test-run-8.log) | PENDING: Codex usage limit until 16:39 | see git log | | jungle-notes/mini-react/깨진 HTML 경고.md |
 | 6 | history tree (pure module) + tree view + move log (scope 5, spec §2-2) | 3 | 103/103 pass (test-run-9.log) | PENDING: Codex usage limit until 16:39 | see git log | | jungle-notes/mini-react/히스토리 트리.md |
-| 7 | samples 1/2 (scope 7, spec §2-4) | 3, 4 | | | | | |
+| 7 | samples 1/2 (scope 7, spec §2-4) | 3, 4 | 111/111 pass (test-run-10.log) | PENDING: Codex usage limit until 16:39 | see git log | | jungle-notes/mini-react/샘플.md |
 | 8 | PROVISIONAL diff/patch + wire Patch / back / forward + jsdom flow test (scope 8) | 2, 6 | | | | | |
 | 9 | debug panel colored from the diff result (scope 6, spec §2-3) | 8 | | | | | |
 
@@ -53,6 +53,8 @@ Raw replies: docs/agent/codex/<feature>-r<round>.md (model gpt-6.1-sol, reasonin
 - src/history.js:53 — (임시 rule) arriving anywhere, including a tree click deep in a branch, marks every fork on its path as "last visited" toward it; forward goes one step along that — me
 - src/history.js — ancestors on one path are never equal to each other (commit refuses to create a duplicate of an ancestor), so "which equal ancestor" never needs a tie-break — me
 - src/treeView.js — tree drawn as nested lists with buttons; current = filled, path to root = outlined; shape left open by §2-5 — me
+- src/samples.js — SAMPLE CONTENT IS MINE, NOT HIS (§2-5 left it open): todo card (ul with data-id/class, b inside li, a href/title) and a post (header, ol with a nested ul, code/em, img, br). Chosen to give the 5 diff cases something to bite; replace freely — me
+- src/app.js — load = sample 1 drawn into 실제 영역 first, then v1 = containerToVdom(실제 영역), then the test area is drawn from v1 (follows the assignment order "실제 영역의 샘플 HTML → VDOM → 테스트 영역") — me
 - index.html — layout (two columns: 실제 영역 | 테스트 영역; below: history | debug; sticky control bar) is mine; spec §2-5 says shapes are decided after he sees it — me
 - server.js:12 — serves only index.html, style.css, src/*.js (allowlist after Codex r1+r2 found Windows name aliases); add a pattern if the page ever needs another file — me
 - server.js:62 — port 5173 (PORT env overrides), binds 127.0.0.1 only — me
