@@ -182,6 +182,81 @@ function makeFilter(onCompute) {
   };
 }
 
+// ---------- 규칙 어기기 (spec §4-3 Q4, §4-7 Q8-1) ----------
+// Each button builds a small rule-breaking component in a hidden sandbox and writes what the library said.
+// Not a FunctionComponent itself: it is plain DOM, so a thrown error cannot break the other cards.
+const BREAKERS = {
+  '자식에서 useState': (sandbox) => {
+    const Child = () => {
+      useState(0);
+      return h('i');
+    };
+    new FunctionComponent(() => h('div', {}, [h(Child)])).mount(sandbox);
+  },
+  '훅 개수 바꾸기': (sandbox) => {
+    let extra = false;
+    const App = () => {
+      useState(0);
+      if (extra) useState(1);
+      return h('p');
+    };
+    const fc = new FunctionComponent(App);
+    fc.mount(sandbox);
+    extra = true;
+    fc.update();
+  },
+  '훅 순서 바꾸기': (sandbox) => {
+    let swapped = false;
+    const App = () => {
+      if (swapped) {
+        useMemo(() => 1, []);
+        useState(0);
+      } else {
+        useState(0);
+        useMemo(() => 1, []);
+      }
+      return h('p', {}, ['그려짐']);
+    };
+    const fc = new FunctionComponent(App);
+    fc.mount(sandbox);
+    swapped = true;
+    fc.update();
+  },
+};
+
+function mountRulesCard(doc) {
+  const box = doc.getElementById('rules');
+  const out = doc.getElementById('rules-out');
+  const row = doc.createElement('div');
+  row.className = 'demo-row';
+  for (const [label, run] of Object.entries(BREAKERS)) {
+    const btn = doc.createElement('button');
+    btn.type = 'button';
+    btn.textContent = label;
+    btn.addEventListener('click', () => {
+      const sandbox = doc.createElement('div');
+      const warnings = [];
+      const realWarn = console.warn;
+      console.warn = (...args) => {
+        warnings.push(args.join(' '));
+        realWarn(...args);
+      };
+      try {
+        run(sandbox);
+        out.textContent = warnings.length
+          ? `경고(계속 그림): ${warnings.join(' / ')} → 화면: "${sandbox.textContent}"`
+          : '아무 일도 없었어요';
+      } catch (err) {
+        out.textContent = `에러(멈춤): ${err.message}`;
+      } finally {
+        console.warn = realWarn;
+      }
+    });
+    row.appendChild(btn);
+  }
+  box.appendChild(row);
+}
+
 // Options are for tests: a short tick, and a timer that starts paused (there is no unmount, so a running interval
 // would keep the test process alive).
 export function mountHooksPage(doc, { tickMs = 1000, timerStartsRunning = true } = {}) {
@@ -207,4 +282,6 @@ export function mountHooksPage(doc, { tickMs = 1000, timerStartsRunning = true }
     byId('filter-computes').textContent = String(computes);
   };
   new FunctionComponent(countRenders(makeFilter(onCompute), byId('filter-renders'))).mount(byId('filter'));
+
+  mountRulesCard(doc);
 }

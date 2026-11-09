@@ -166,6 +166,20 @@ test('filter card: "새 배열로 추가" recomputes; "push로 추가" then "다
   assert.match(doc.querySelector('#filter .muted').textContent, /실제 배열 8개/); // but the array has 8
 });
 
+// ---------- rules card (feature 20) ----------
+
+test('rules card: each button shows what the library said (2 errors, 1 warning that keeps drawing)', async (t) => {
+  t.mock.method(console, 'warn', () => {}); // keep the test output quiet; the card wraps console.warn itself
+  const { doc, press } = open();
+  const said = () => doc.getElementById('rules-out').textContent;
+  await press('rules', '자식에서 useState');
+  assert.match(said(), /^에러\(멈춤\):.*root/);
+  await press('rules', '훅 개수 바꾸기');
+  assert.match(said(), /^에러\(멈춤\):.*hook count changed/);
+  await press('rules', '훅 순서 바꾸기');
+  assert.match(said(), /^경고\(계속 그림\):.*hook order changed.*"그려짐"/);
+});
+
 test('no key attribute reaches the real DOM of the cards (§3-3 Q12)', async () => {
   const { doc, press } = open();
   await press('todos', '앞에 추가');

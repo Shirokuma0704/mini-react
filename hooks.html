@@ -62,6 +62,17 @@
       <div id="filter" class="demo"></div>
       <p class="renders">그린 횟수 <output id="filter-renders">0</output> · 계산 횟수 <output id="filter-computes">0</output></p>
     </section>
+
+    <section class="panel">
+      <h2>규칙 어기기 <span class="hint">훅 규칙 · 명세 4-3, 4-7</span></h2>
+      <ul class="try">
+        <li><b>자식에서 useState</b>: 자식 컴포넌트가 훅을 부름 → 에러</li>
+        <li><b>훅 개수 바꾸기</b>: 두 번째 그리기에서 <code>if</code> 안의 useState가 하나 더 불림 → 에러</li>
+        <li><b>훅 순서 바꾸기</b>: 개수는 같고 useState·useMemo 순서만 바뀜 → 경고만 하고 계속 그림</li>
+      </ul>
+      <div id="rules" class="demo"></div>
+      <p class="renders">라이브러리가 한 말 <output id="rules-out" class="said"></output></p>
+    </section>
   </main>
 
   <script type="module" src="./src/hooksMain.js"></script>

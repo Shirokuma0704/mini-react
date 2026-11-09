@@ -8,6 +8,12 @@
 //            value, different = compute again. No list = compute on every render; [] = compute once.
 // Spec §4-3: state lives in a `hooks` array outside the function; useState finds its slot by "which call am I" (cursor),
 //            and mount()/update() reset the cursor to 0 right before calling the component.
+//            Rules (§4-3): after the component function returns, the number of hooks it called must equal the number of
+//            slots from earlier renders, otherwise it throws before anything is patched (the screen keeps the last good
+//            render). Same number but a different kind at some slot (state/effect/memo) = one console.warn per render,
+//            and the render goes on with a fresh slot of the new kind in that place.
+// Spec §4-7: hooks only work in the root component. While child components are being expanded, any hook call throws
+//            an error that says "root". The flag is cleared in a finally, so a later component can use hooks normally.
 // Spec §4-4: the setter takes a value or a function (called with the latest value); the same value (Object.is,
 //            a pointer comparison) skips the re-render.
 // Spec §4-4 (batching): many set calls in one turn re-render only once. The first set books one update() as a
@@ -23,6 +29,8 @@ import { syncEvents } from './events.js';
 
 // The component whose function is running right now (null when no component is rendering).
 let currentComponent = null;
+// True while child components are being expanded (the root function has already returned): hooks are an error then.
+let expandingChildren = false;
 
 export class FunctionComponent {
   constructor(fn, props = {}) {
@@ -30,6 +38,8 @@ export class FunctionComponent {
     this.props = props;
     this.hooks = []; // one slot per useState call, e.g. { kind: 'state', value }
     this.cursor = 0; // which slot the next useState call uses
+    this.hookCount = null; // how many hooks the last good render called (null = never rendered)
+    this.warned = false; // true once this render has already warned about hook order
     this.container = null;
     this.root = null; // the last drawn root VDOM
     this.updateQueued = false; // true while a batched update() is booked but has not run yet
@@ -38,15 +48,35 @@ export class FunctionComponent {
   // Call the function with the cursor at 0, expand child components, wrap in a root div.
   buildRoot() {
     this.cursor = 0;
+    this.warned = false;
     const previous = currentComponent;
+    const previousExpanding = expandingChildren;
     currentComponent = this;
+    expandingChildren = false;
     let result;
     try {
-      result = expand(this.fn(this.props));
+      const vnode = this.fn(this.props);
+      this.checkHookCount();
+      expandingChildren = true; // from here on, only child components run
+      result = expand(vnode);
     } finally {
       currentComponent = previous;
+      expandingChildren = previousExpanding;
     }
     return { kind: 'element', tag: 'div', attrs: {}, children: result === null ? [] : [result] };
+  }
+
+  // Compare this render's hook count with the last good one; on a difference, undo this render's slots and throw.
+  checkHookCount() {
+    if (this.hookCount === null) {
+      this.hookCount = this.cursor; // first render: nothing to compare
+      return;
+    }
+    if (this.cursor === this.hookCount) return;
+    const message = `hook count changed: last render called ${this.hookCount} hooks, this render called ${this.cursor}`;
+    this.hooks.length = Math.min(this.hooks.length, this.hookCount); // drop slots this failed render added
+    for (const slot of this.hooks) if (slot.kind === 'effect') slot.pending = null; // forget effects it booked
+    throw new Error(message);
   }
 
   // First render.
@@ -105,11 +135,7 @@ export function useState(initial) {
   if (component === null) {
     throw new Error('useState can only be called while a FunctionComponent is rendering');
   }
-  const index = component.cursor++;
-  if (index >= component.hooks.length) {
-    component.hooks[index] = { kind: 'state', value: initial };
-  }
-  const slot = component.hooks[index];
+  const { slot } = takeSlot(component, 'state', () => ({ kind: 'state', value: initial }));
 
   const set = (arg) => {
     const next = typeof arg === 'function' ? arg(slot.value) : arg;
@@ -126,12 +152,7 @@ export function useEffect(fn, deps) {
   if (component === null) {
     throw new Error('useEffect can only be called while a FunctionComponent is rendering');
   }
-  const index = component.cursor++;
-  const first = index >= component.hooks.length;
-  if (first) {
-    component.hooks[index] = { kind: 'effect', deps: undefined, cleanup: null, pending: null };
-  }
-  const slot = component.hooks[index];
+  const { slot, first } = takeSlot(component, 'effect', () => ({ kind: 'effect', deps: undefined, cleanup: null, pending: null }));
   if (first || depsChanged(deps, slot.deps)) slot.pending = { fn, deps };
 }
 
@@ -141,17 +162,32 @@ export function useMemo(fn, deps) {
   if (component === null) {
     throw new Error('useMemo can only be called while a FunctionComponent is rendering');
   }
-  const index = component.cursor++;
-  const first = index >= component.hooks.length;
-  if (first) {
-    component.hooks[index] = { kind: 'memo', deps: undefined, value: undefined };
-  }
-  const slot = component.hooks[index];
+  const { slot, first } = takeSlot(component, 'memo', () => ({ kind: 'memo', deps: undefined, value: undefined }));
   if (first || depsChanged(deps, slot.deps)) {
     slot.value = fn();
     slot.deps = deps;
   }
   return slot.value;
+}
+
+// Every hook asks here for "its" slot. Throws in child components (§4-7); warns once per render when the slot at this
+// position was made by a different kind of hook (§4-3) and then replaces it with a fresh slot (its old value is lost).
+// Returns the slot and whether it is new (first = true).
+function takeSlot(component, kind, make) {
+  if (expandingChildren) {
+    throw new Error(`hooks can only be called in the root component, not in a child (called: ${kind})`);
+  }
+  const index = component.cursor++;
+  let first = index >= component.hooks.length;
+  if (!first && component.hooks[index].kind !== kind) {
+    if (!component.warned) {
+      component.warned = true;
+      console.warn(`hook order changed: slot ${index} was "${component.hooks[index].kind}" but is now "${kind}"`);
+    }
+    first = true;
+  }
+  if (first) component.hooks[index] = make();
+  return { slot: component.hooks[index], first };
 }
 
 // True when an effect/memo must run again: no list on either side, different length, or any item differs (Object.is).
