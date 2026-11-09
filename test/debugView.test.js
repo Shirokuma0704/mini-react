@@ -34,27 +34,64 @@ test('no changes -> nothing colored', () => {
   assert.ok(debugLines(NEW, [], 'new').every((l) => l.mark === null));
 });
 
-test('the provisional diff (replace the root) colors every line: old side del, new side add', () => {
+const marks = (root, changes, side) =>
+  debugLines(root, changes, side).filter((l) => l.mark).map((l) => `${l.mark} ${l.text}`);
+
+// Spec §3-4 colors: 추가 = green on the new side, 지워짐 = red on the old side, 교체 = old red + new green,
+// 고침 = yellow on both sides (자리 고침 included). oldPath is read on the old side, path on the new side.
+test('the real diff of a text change colors only that text, yellow on both sides', () => {
   const changes = diff(OLD, NEW);
-  assert.ok(debugLines(OLD, changes, 'old').every((l) => l.mark === 'del'));
-  assert.ok(debugLines(NEW, changes, 'new').every((l) => l.mark === 'add'));
+  assert.deepEqual(marks(OLD, changes, 'old'), ['chg "b"']);
+  assert.deepEqual(marks(NEW, changes, 'new'), ['chg "B"']);
 });
 
-test('a change at a path colors that node and everything under it, nothing else', () => {
-  const changes = [{ type: 'replace', path: [0, 1], node: NEW.children[0].children[1] }];
-  const marked = debugLines(NEW, changes, 'new').filter((l) => l.mark).map((l) => l.text);
-  assert.deepEqual(marked, ['<li>', '"B"', '</li>']);
+test('replace colors the node and everything under it: old side red, new side green', () => {
+  const changes = [{ type: 'replace', oldPath: [0, 1], path: [0, 1], node: NEW.children[0].children[1] }];
+  assert.deepEqual(marks(OLD, changes, 'old'), ['del <li>', 'del "b"', 'del </li>']);
+  assert.deepEqual(marks(NEW, changes, 'new'), ['add <li>', 'add "B"', 'add </li>']);
+});
+
+test('insert is green on the new side only; remove is red on the old side only', () => {
+  const a = htmlToVdom('<ul><li>a</li></ul>', doc);
+  const b = htmlToVdom('<ul><li>x</li><li>a</li></ul>', doc);
+  const ins = diff(htmlToVdom('<ul><li key="a">a</li></ul>', doc), htmlToVdom('<ul><li key="x">x</li><li key="a">a</li></ul>', doc));
+  assert.deepEqual(marks(b, ins, 'new'), ['add <li>', 'add "x"', 'add </li>']);
+  assert.deepEqual(marks(a, ins, 'old'), []);
+  const rem = [{ type: 'remove', path: [0, 0] }];
+  assert.deepEqual(marks(b, rem, 'old'), ['del <li>', 'del "x"', 'del </li>']);
+  assert.deepEqual(marks(a, rem, 'new'), []);
+});
+
+test("an attribute change colors only that element's own lines, not its inside", () => {
+  const a = htmlToVdom('<p class="a"><b>x</b></p>', doc);
+  const b = htmlToVdom('<p class="b"><b>x</b></p>', doc);
+  assert.deepEqual(marks(b, diff(a, b), 'new'), ['chg <p class="b">', 'chg </p>']);
+  assert.deepEqual(marks(a, diff(a, b), 'old'), ['chg <p class="a">', 'chg </p>']);
+});
+
+test('a move colors the moved node and its inside yellow, at its old place and at its new place', () => {
+  const a = htmlToVdom('<ul><li key="a">a</li><li key="c">c</li></ul>', doc);
+  const b = htmlToVdom('<ul><li key="c">c</li><li key="a">a</li></ul>', doc);
+  const changes = diff(a, b);
+  assert.deepEqual(marks(a, changes, 'old'), ['chg <li key="c">', 'chg "c"', 'chg </li>']);
+  assert.deepEqual(marks(b, changes, 'new'), ['chg <li key="c">', 'chg "c"', 'chg </li>']);
+});
+
+test('inside a moved node, a more specific change wins (an insert stays green)', () => {
+  const a = htmlToVdom('<ul><li key="a">a</li><li key="c">c</li></ul>', doc);
+  const b = htmlToVdom('<ul><li key="c">c<b>new</b></li><li key="a">a</li></ul>', doc);
+  assert.deepEqual(marks(b, diff(a, b), 'new'), ['chg <li key="c">', 'chg "c"', 'add <b>', 'add "new"', 'add </b>', 'chg </li>']);
 });
 
 test('colors follow the diff result even when it is WRONG (§2-3: so a wrong diff is visible)', () => {
   // The real difference is li #2's text, but this (wrong) change list points at li #1.
-  const wrong = [{ type: 'replace', path: [0, 0], node: NEW.children[0].children[0] }];
+  const wrong = [{ type: 'replace', oldPath: [0, 0], path: [0, 0], node: NEW.children[0].children[0] }];
   const marked = debugLines(NEW, wrong, 'new').filter((l) => l.mark).map((l) => l.path.join('.'));
   assert.deepEqual(marked, ['0.0', '0.0.0', '0.0']);
 });
 
 test('an unknown change type is painted chg on both sides', () => {
-  const changes = [{ type: 'text', path: [0, 1, 0] }];
+  const changes = [{ type: 'text', oldPath: [0, 1, 0], path: [0, 1, 0] }];
   assert.equal(debugLines(OLD, changes, 'old').find((l) => l.text === '"b"').mark, 'chg');
   assert.equal(debugLines(NEW, changes, 'new').find((l) => l.text === '"B"').mark, 'chg');
 });
@@ -69,9 +106,10 @@ test('renderDebug writes one span per line with its class and indentation', () =
   renderDebug(pre, debugLines(NEW, diff(OLD, NEW), 'new'), doc);
   const spans = pre.querySelectorAll('span.line');
   assert.equal(spans.length, 8);
-  assert.equal(spans[2].textContent, '    "a"');
-  assert.equal(spans[2].className, 'line add');
-  assert.equal(spans[2].dataset.path, '0.0.0');
+  assert.equal(spans[5].textContent, '    "B"');
+  assert.equal(spans[5].className, 'line chg');
+  assert.equal(spans[5].dataset.path, '0.1.0');
+  assert.equal(spans[2].className, 'line');
 });
 
 test('renderDebug does not interpret tag text as HTML', () => {

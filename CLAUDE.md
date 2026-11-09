@@ -5,7 +5,7 @@ Keep each rule one line. Delete rules that stop being true, in the same commit a
 This is his real mini React build (from 11-09), grown from the 11-06 trial run (../trial-vdom kept as the record).
 
 ## Specs
-- Spec: ../spec-draft.md — section 1 (VDOM node) built; grill the rest before building
+- Spec: ../spec-draft.md — §1 VDOM, §2 verification page, §3 diff (grilled 11-09) all built; Phase 2 (hooks) not grilled yet
 - Framework decisions: ../agent-framework-spec.md
 
 ## Commands

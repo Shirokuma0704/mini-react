@@ -32,7 +32,8 @@ function childNamespace(tag, ns) {
   return ns;
 }
 
-function createNode(vnode, doc, parentNs) {
+// opts.keys = false: leave out the "key" attribute (spec §3-3 Q12: 실제 영역 never shows keys; the preview does, Q13).
+function createNode(vnode, doc, parentNs, opts) {
   if (vnode.kind === 'text') {
     return doc.createTextNode(vnode.text);
   }
@@ -41,17 +42,26 @@ function createNode(vnode, doc, parentNs) {
   else if (vnode.tag === 'math') ns = MATH_NS;
   const el = ns ? doc.createElementNS(ns, vnode.tag) : doc.createElement(vnode.tag);
   for (const [name, value] of Object.entries(vnode.attrs)) {
+    if (name === 'key' && opts.keys === false) continue;
     el.setAttribute(name, value);
   }
   const inner = childNamespace(vnode.tag, ns);
   for (const child of vnode.children) {
-    el.appendChild(createNode(child, doc, inner));
+    el.appendChild(createNode(child, doc, inner, opts));
   }
   return el;
 }
 
-export function vdomToDom(vnode, doc) {
-  return createNode(vnode, doc, null);
+export function vdomToDom(vnode, doc, opts = {}) {
+  return createNode(vnode, doc, null, opts);
+}
+
+// Same, for a node that will live inside `parent` (an element already in a document): the namespace comes from the
+// parent, so a node patched in under <svg> is still SVG (src/patch.js).
+export function vdomToDomUnder(parent, vnode, doc, opts = {}) {
+  let ns = parent.namespaceURI === SVG_NS || parent.namespaceURI === MATH_NS ? parent.namespaceURI : null;
+  if (ns === SVG_NS && parent.localName === 'foreignObject') ns = null;
+  return createNode(vnode, doc, ns, opts);
 }
 
 function escapeText(s) {
@@ -120,10 +130,10 @@ export function containerToVdom(container) {
   return { kind: 'element', tag: 'div', attrs: {}, children };
 }
 
-// Replace everything inside `container` with the root's children.
-export function renderInto(container, root, doc) {
+// Replace everything inside `container` with the root's children. opts as in createNode.
+export function renderInto(container, root, doc, opts = {}) {
   while (container.firstChild) container.removeChild(container.firstChild);
   for (const child of root.children) {
-    container.appendChild(vdomToDom(child, doc));
+    container.appendChild(vdomToDomUnder(container, child, doc, opts));
   }
 }

@@ -10,25 +10,11 @@
 // - "히스토리 로그에 V3 -> V4 -> V3": every move (commit, back, forward, click) is appended to a log kept apart
 //   from the tree.
 //
-// "Equal" is deep VDOM equality (vdomEqual below), not "diff returned no changes": diff is still PROVISIONAL and
-// always reports a change (see docs/agent/progress.md).
+// "Equal" is deep VDOM equality (src/vdomEqual.js). Spec §3-4 says "diff가 빈 목록을 내놓으면 같다"; switching to
+// that is a separate step (see docs/agent/progress.md).
+import { vdomEqual } from './vdomEqual.js';
 
-export function vdomEqual(a, b) {
-  if (a.kind !== b.kind) return false;
-  if (a.kind === 'text') return a.text === b.text;
-  if (a.tag !== b.tag) return false;
-  const ak = Object.keys(a.attrs);
-  const bk = Object.keys(b.attrs);
-  if (ak.length !== bk.length) return false;
-  for (const k of ak) {
-    if (!Object.hasOwn(b.attrs, k) || a.attrs[k] !== b.attrs[k]) return false;
-  }
-  if (a.children.length !== b.children.length) return false;
-  for (let i = 0; i < a.children.length; i++) {
-    if (!vdomEqual(a.children[i], b.children[i])) return false;
-  }
-  return true;
-}
+export { vdomEqual };
 
 // structuredClone keeps own keys such as "__proto__" (domToVdom stores them with defineProperty).
 const copy = (vdom) => structuredClone(vdom);

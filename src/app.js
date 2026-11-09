@@ -9,10 +9,10 @@ import { createSync } from './sync.js';
 import { lintHtml, warningLine } from './lint.js';
 import { createHistory } from './history.js';
 import { renderTree, logText } from './treeView.js';
-import { htmlToVdom, containerToVdom, renderInto, rootToHtml } from './render.js';
+import { htmlToVdom, renderInto, rootToHtml } from './render.js';
 import { SAMPLES } from './samples.js';
-import { diff } from './diff.js'; // PROVISIONAL
-import { patch } from './patch.js'; // PROVISIONAL
+import { diff } from './diff.js';
+import { patch } from './patch.js';
 import { debugLines, renderDebug } from './debugView.js';
 
 const EMPTY_ROOT = { kind: 'element', tag: 'div', attrs: {}, children: [] };
@@ -62,8 +62,11 @@ export function mountApp(doc) {
   }
 
   // Load (spec §2): sample HTML in 실제 영역 → VDOM (v1) → test area. §2-4: "처음 열면 샘플 1이 들어 있다".
-  renderInto(els.actual, htmlToVdom(SAMPLES[0].html, doc), doc);
-  const history = createHistory(containerToVdom(els.actual));
+  // v1 is made from the sample's HTML text, not read back from 실제 영역: 실제 영역 never shows keys (§3-3 Q12),
+  // so reading it back would lose them. 실제 영역 is drawn from v1 without keys.
+  const v1 = htmlToVdom(SAMPLES[0].html, doc);
+  renderInto(els.actual, v1, doc, { keys: false });
+  const history = createHistory(v1);
   sync.setSource(rootToHtml(history.current().vdom));
 
   function refresh() {

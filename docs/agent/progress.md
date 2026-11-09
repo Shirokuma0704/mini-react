@@ -18,11 +18,20 @@ this run by his choice; rows 2-9 are all "ahead" until he checks them.
 | 7 | samples 1/2 (scope 7, spec §2-4) | 3, 4 | 111/111 pass (test-run-10.log) | batch r1: buttons also redrew the preview, against §2-4 "글자 칸만 채운다", and the test encoded it → fixed (fillSourceOnly) + test corrected; → then REVERSED by 상철님 ("미리보기도 같이", spec §2-4 updated): buttons fill text box + preview; Codex: SKIPPED by 상철님 11-09 13:0x ("검증 생략") after the usage limit hit again; 148/148 tests + real-browser check only | see git log | | jungle-notes/mini-react/샘플.md |
 | 8 | PROVISIONAL diff/patch + wire Patch / back / forward + jsdom flow test (scope 8) | 2, 6 | 123/123 pass (test-run-11.log; flow = test/flow.test.js) | batch r1: OK | see git log | | jungle-notes/mini-react/Patch 흐름 (임시 diff·patch).md |
 | 9 | debug panel colored from the diff result (scope 6, spec §2-3) | 8 | 136/136 pass (test-run-12.log) | batch r1: quotes in attr values made 2 different attr sets look the same → JSON form, tested; r2 (fix-batch-r2.md): sample + debug fixes confirmed; lint still missed cut-off quoted values, foreignObject = HTML, SVG typos, raw-text cut-off; CSS test lacked min-width → all fixed + tested (8ed1189 follow-up); r3 (fix-batch-r3.md): OK | see git log | | jungle-notes/mini-react/디버그 칸.md |
+| 10 | REAL diff + patch (spec §3) + debug panel learns the 4 kinds + 실제 영역 drops keys | 8, 9 | 181/181 pass (test-run-17.log; diff 23, patch 10 incl. 400 random list pairs, debugView 14) | NOT RUN: usage limit (상철님 11-09 ~14:30 "codex한도를 다써서 검증이 안되긴해"); pending | see git log | | jungle-notes/mini-react/diff와 patch.md |
+
+Next features (spec §3, after 10; one commit each): 11 history "same" = diff returned [] (§3-4) · 12 duplicate-key warning line (§3-3 Q14) · 13 samples with keys (§2-5).
+
+Run of 11-09 after the diff grill: normal orchestrate stops again (the "끝까지 쭉" suspension was for the goal run only).
 
 Order note: debug panel (scope 6) comes after diff/patch (scope 8) because it colors from the diff result.
 
-Ahead of his verification: 8 (rows 2-9; stop suspended for this run, see above)
-Latest full run: test-run-16.log, 148/148 pass.
+Ahead of his verification: 9 (rows 2-10) → over 3: wait for him after every feature.
+Latest full run: test-run-17.log, 181/181 pass.
+
+## Real-browser check of row 10 (11-09 ~14:40, Claude app built-in browser, npm start on port 5174)
+Driven by script in the page (not typed): (1) sample 1, unkeyed, new li put before the first + text edit → Patch → old li elements reused (same objects), colors follow index pairing (expected for unkeyed lists, §3-2); (2) indented keyed [a,b,c] → [c,x,a,b] → 실제 영역 has no key attributes, preview keeps them, li elements a/b/c reused, c's group moved, x's group added, trailing "
+" left c's group and joined b's (§3-2 Q8). Not checked: typing by hand, light mode, other browsers.
 
 ## Real-browser check (11-09 ~12:10, Claude app built-in browser, Chromium, dark mode, npm start)
 Typed with the keyboard: text box edit on line 2 → no sync while on the line → ArrowDown → preview updated; Patch → 실제 영역 h2 changed, log v1 → v2, debug lines colored; back → 실제 영역 + text box + preview = v1; forward → v2, log v1 → v2 → v1 → v2. Preview typing → click another li → text box updated. Sample 2 → Patch → v2. No console errors. Found and fixed: debug panel overflowing the page width (grid min-width), Patch button text invisible on hover in dark mode, broken-image icon in sample 2 (img → hr), Korean particles in status lines (v2을 → 새 버전 v2). Not checked: Firefox/Safari, light mode, IME composition (Korean typing) events in the preview.
@@ -34,12 +43,10 @@ All test-run-*.log are full `npm test` runs; the latest is the one that counts.
 ## Codex replies
 Raw replies: docs/agent/codex/<feature>-r<round>.md (model gpt-6.1-sol, reasoning effort high, read-only sandbox).
 
-## PROVISIONAL (replace after the diff grill, spec §2-5)
-- src/diff.js — PROVISIONAL, replace after the diff grill: always returns ONE change `{ type: 'replace', path: [], node: newRoot }`
-- src/patch.js — PROVISIONAL, replace after the diff grill: applies only replace-at-root (redraws everything inside 실제 영역); any other change throws "PROVISIONAL patch: …" on purpose
-- test/diffPatch.test.js — pins only the provisional contract; rewrite with the real diff
-- src/history.js — "same version" uses deep equality because the provisional diff cannot say "no change"; may switch to "diff returned []" later
-- OPEN QUESTION FOR HIM: change-list format `{ type, path, node? }` — path = child indexes from the root ([] = root, [1,0] = root.children[1].children[0]); only type 'replace' so far. Keep it, or decide it in the diff grill? Note: comments are dropped from the VDOM but never present in 실제 영역 either (it is always drawn from the VDOM), so VDOM index = DOM index there.
+## PROVISIONAL — RESOLVED by row 10 (11-09)
+- src/diff.js, src/patch.js replaced by the real ones (spec §3); test/diffPatch.test.js deleted (spec changed), replaced by test/diff.test.js + test/patch.test.js
+- src/history.js — still deep equality (now src/vdomEqual.js, re-exported); switch to "diff returned []" is feature 11
+- ~~OPEN QUESTION FOR HIM: change-list format~~ RESOLVED in the diff grill (§3-4 Q15 "전부 다 그대로"), refined in row 10 (see Open). Old text: change-list format `{ type, path, node? }` — path = child indexes from the root ([] = root, [1,0] = root.children[1].children[0]); only type 'replace' so far. Keep it, or decide it in the diff grill? Note: comments are dropped from the VDOM but never present in 실제 영역 either (it is always drawn from the VDOM), so VDOM index = DOM index there.
 
 ## Open disagreements / unsure spots
 <!-- file:line — what — who raised it (me / Codex) -->
@@ -75,3 +82,12 @@ Raw replies: docs/agent/codex/<feature>-r<round>.md (model gpt-6.1-sol, reasonin
 - server.js:12 — serves only index.html, style.css, src/*.js (allowlist after Codex r1+r2 found Windows name aliases); add a pattern if the page ever needs another file — me
 - server.js:62 — port 5173 (PORT env overrides), binds 127.0.0.1 only — me
 - src/render.js:75 — HTML text is written back from the VDOM with no pretty-printing; formatting survives only because whitespace text is kept (§1) — me
+- src/diff.js:4 — §3-4 says `{ 종류, 위치, 새 노드 }`; a change now carries TWO places: oldPath (old tree) and path (new tree), insert has parentOldPath, remove has only path (= old tree). Needed because a node shifts when something is put before it; the debug panel colors the old side by oldPath and the new side by path — me (row 10)
+- src/diff.js:80 — a list counts as "keyed" if EITHER side has a keyed child; a side with no keyed child then forms one unkeyed group that never pairs (all removed / inserted) — me
+- src/diff.js:87 — duplicate keys: the first old one pairs with the first new one, later duplicates pair with nothing (spec §3-3 Q14 "결과 보장 안 함" left the rule open) — me
+- src/diff.js:52 — 양 끝 잘라내기 compares with deep equality (vdomEqual), so a whole subtree is walked at each end step — me
+- src/patch.js:6 — stale-index problem (§3-5): every old path is turned into its DOM node BEFORE any change; phases replace → text/attrs → remove → insert/move per parent by new index. Matches diff's front-walk, checked by 400 random list pairs (test/patch.test.js) — me
+- src/patch.js — "key" is skipped when setting attributes and when creating nodes for 실제 영역 (§3-3 Q12); the preview keeps keys because it is drawn with the default options (§3-3 Q13) — me
+- src/debugView.js:13 — reach: insert/remove/replace/move color the node and its inside; text/attrs changes only the node's own lines; most specific change wins on overlap — me
+- src/app.js — load: v1 = htmlToVdom(sample 1 text), then 실제 영역 drawn from v1 without keys. Before: v1 was read back from 실제 영역, which would lose keys now. Spec §2 order "실제 영역의 샘플 HTML → VDOM" is kept in spirit (same content), not literally — me
+- spec §3-5 "핵심 5가지 경우" — not checked against the assignment text; 3-1 covers the common tutorial five (guess) — me

@@ -2,14 +2,19 @@
 //
 // §2-3 (Q6-1): the color comes from OUR diff's result, not from comparing the text, "그래야 diff가 틀렸을 때 눈에 보인다".
 // So this file never compares old and new itself. It lays out each VDOM one line per node piece, gives every line
-// the path of its node, and paints the lines whose path is at or under a changed path.
+// the path of its node, and paints the lines a change points at.
 //
-// Path = child indexes from the root, the same as change.path in src/diff.js. The root is not shown
-// (it is the wrapper, see src/render.js), so the first lines have paths [0], [1], ...
+// Paths = child indexes from the root, as in src/diff.js. The root is not shown (it is the wrapper, see
+// src/render.js), so the first lines have paths [0], [1], ... The old side reads a change's place in the OLD tree
+// (oldPath; for remove, path), the new side its place in the NEW tree (path; remove has none there).
 //
-// Colors by change type and side. Only 'replace' exists while diff is PROVISIONAL; any other type the real diff
-// adds is painted 'chg' on both sides until this table learns it.
-const MARKS = {
+// Colors, spec §3-4: 추가 = add (new side), 지워짐 = del (old side), 교체 = del old + add new, 고침 = chg both sides
+// (자리 고침 included). An unknown type is painted chg on both sides, so it still shows.
+// Reach: insert / remove / replace / move cover the node and everything under it; a text or attribute change covers
+// only that node's own lines. When several changes cover a line, the most specific (longest path) wins.
+const SIDES = {
+  insert: { new: 'add' },
+  remove: { old: 'del' },
   replace: { old: 'del', new: 'add' },
 };
 
@@ -18,11 +23,26 @@ function startsWith(path, prefix) {
   return prefix.every((v, i) => path[i] === v);
 }
 
+function placeOn(change, side) {
+  if (side === 'old') return change.type === 'remove' ? change.path : change.oldPath;
+  return change.type === 'remove' ? undefined : change.path;
+}
+
 function markFor(path, changes, side) {
   let mark = null;
+  let best = -1;
   for (const change of changes) {
-    if (!startsWith(path, change.path)) continue;
-    mark = MARKS[change.type]?.[side] ?? 'chg';
+    const at = placeOn(change, side);
+    if (!at) continue;
+    const known = SIDES[change.type];
+    const color = known ? known[side] : 'chg';
+    if (!color) continue;
+    const onlyItself = change.type === 'update' && change.what !== 'move';
+    const hit = onlyItself ? at.length === path.length && startsWith(path, at) : startsWith(path, at);
+    if (hit && at.length > best) {
+      best = at.length;
+      mark = color;
+    }
   }
   return mark;
 }
