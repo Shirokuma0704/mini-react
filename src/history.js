@@ -1,0 +1,102 @@
+// Version history as a tree, spec-draft §2-2. Pure module: no DOM, so it is unit-tested on its own.
+//
+// Rules from the spec (his words in quotes):
+// - "git처럼 트리구조": committing after going back makes a new branch; old branches are never removed.
+// - "바뀐 게 없으면 새 버전을 만들지 않고 알리기만 한다": commit equal to the current version → result 'same'.
+// - "같은 갈래에서만": commit equal to a version on the path current → root → move there (result 'moved').
+//   An equal version on another branch, or below the current one, does not count → a new version is made.
+// - "(임시) 갈림길에서 앞으로가기는 마지막으로 있었던 가지로 간다": every arrival at a version marks, for each of
+//   its ancestors, the child on the way to it as `lastChild`; forward follows `lastChild`.
+// - "히스토리 로그에 V3 -> V4 -> V3": every move (commit, back, forward, click) is appended to a log kept apart
+//   from the tree.
+//
+// "Equal" is deep VDOM equality (vdomEqual below), not "diff returned no changes": diff is still PROVISIONAL and
+// always reports a change (see docs/agent/progress.md).
+
+export function vdomEqual(a, b) {
+  if (a.kind !== b.kind) return false;
+  if (a.kind === 'text') return a.text === b.text;
+  if (a.tag !== b.tag) return false;
+  const ak = Object.keys(a.attrs);
+  const bk = Object.keys(b.attrs);
+  if (ak.length !== bk.length) return false;
+  for (const k of ak) {
+    if (!Object.hasOwn(b.attrs, k) || a.attrs[k] !== b.attrs[k]) return false;
+  }
+  if (a.children.length !== b.children.length) return false;
+  for (let i = 0; i < a.children.length; i++) {
+    if (!vdomEqual(a.children[i], b.children[i])) return false;
+  }
+  return true;
+}
+
+// structuredClone keeps own keys such as "__proto__" (domToVdom stores them with defineProperty).
+const copy = (vdom) => structuredClone(vdom);
+
+export function createHistory(firstVdom) {
+  const byId = new Map();
+  let nextId = 1;
+  const log = [];
+
+  function makeNode(vdom, parent) {
+    const node = { id: nextId, label: `v${nextId}`, vdom: copy(vdom), parent, children: [], lastChild: null };
+    nextId += 1;
+    byId.set(node.id, node);
+    if (parent) parent.children.push(node);
+    return node;
+  }
+
+  const root = makeNode(firstVdom, null);
+  let current = root;
+  log.push(root);
+
+  function arrive(node) {
+    for (let child = node; child.parent; child = child.parent) {
+      child.parent.lastChild = child;
+    }
+    current = node;
+    log.push(node);
+    return node;
+  }
+
+  function pathToRoot() {
+    const path = [];
+    for (let n = current; n; n = n.parent) path.push(n);
+    return path;
+  }
+
+  return {
+    root: () => root,
+    current: () => current,
+    get: (id) => byId.get(id) ?? null,
+    all: () => [...byId.values()],
+    log: () => [...log],
+    pathToRoot,
+    canBack: () => current.parent !== null,
+    canForward: () => current.children.length > 0,
+
+    commit(vdom) {
+      if (vdomEqual(vdom, current.vdom)) return { result: 'same', node: current };
+      for (let n = current.parent; n; n = n.parent) {
+        if (vdomEqual(vdom, n.vdom)) return { result: 'moved', node: arrive(n) };
+      }
+      return { result: 'created', node: arrive(makeNode(vdom, current)) };
+    },
+
+    back() {
+      return current.parent ? arrive(current.parent) : null;
+    },
+
+    forward() {
+      if (current.children.length === 0) return null;
+      // lastChild is always set once a child exists (making a child arrives at it), the fallback is only a guard.
+      return arrive(current.lastChild ?? current.children[current.children.length - 1]);
+    },
+
+    goto(id) {
+      const node = byId.get(id);
+      if (!node || node === current) return null;
+      return arrive(node);
+    },
+  };
+}

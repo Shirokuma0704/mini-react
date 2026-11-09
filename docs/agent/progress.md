@@ -14,7 +14,7 @@ this run by his choice; rows 2-9 are all "ahead" until he checks them.
 | 3 | page layout + `npm start` static server (scope 2) | 2 | 46/46 pass (test-run-6.log) | r1: Windows case bypass (/NODE_MODULES/) → fixed + tested; r2: Windows stream alias (node_modules::$INDEX_ALLOCATION) → server now serves an allowlist (index.html, style.css, src/*.js), tested; r3 FAILED: usage limit → PENDING | see git log | | jungle-notes/mini-react/검증 페이지 뼈대.md |
 | 4 | text box ↔ preview sync (scope 3, spec §2-1) | 2, 3 | 65/65 pass (test-run-7.log) | r1: Shift-selection missed (anchor vs moving end) → fixed + tested; gaps (preview Enter, via mountApp) → tests added; r2 FAILED: Codex usage limit (both 6.1-sol and 6-astra) until 16:39 → PENDING | see git log | | jungle-notes/mini-react/글자 칸과 미리보기.md |
 | 5 | broken-HTML warning (scope 4, spec §2-1) | 3 | 82/82 pass (test-run-8.log) | PENDING: Codex usage limit until 16:39 | see git log | | jungle-notes/mini-react/깨진 HTML 경고.md |
-| 6 | history tree (pure module) + tree view + move log (scope 5, spec §2-2) | 3 | | | | | |
+| 6 | history tree (pure module) + tree view + move log (scope 5, spec §2-2) | 3 | 103/103 pass (test-run-9.log) | PENDING: Codex usage limit until 16:39 | see git log | | jungle-notes/mini-react/히스토리 트리.md |
 | 7 | samples 1/2 (scope 7, spec §2-4) | 3, 4 | | | | | |
 | 8 | PROVISIONAL diff/patch + wire Patch / back / forward + jsdom flow test (scope 8) | 2, 6 | | | | | |
 | 9 | debug panel colored from the diff result (scope 6, spec §2-3) | 8 | | | | | |
@@ -48,6 +48,11 @@ Raw replies: docs/agent/codex/<feature>-r<round>.md (model gpt-6.1-sol, reasonin
 - src/lint.js:7 — names with a dash = custom elements, never "unknown"; SVG/MathML names are known — me
 - src/lint.js:8 — crossed tags <b><i></b></i>: <i> unclosed at </b>, then </i> stray (2 warnings) — me
 - app.js — the warning line shows the first warning (by line) + "(외 N개)"; it updates on every keystroke, unlike the preview sync — me
+- src/history.js:14 — "equal" = deep VDOM equality (attr order ignored), not "diff returned nothing": the provisional diff always returns one change. Revisit after the diff grill — me
+- src/history.js:43 — version labels v1, v2, … in creation order — me
+- src/history.js:53 — (임시 rule) arriving anywhere, including a tree click deep in a branch, marks every fork on its path as "last visited" toward it; forward goes one step along that — me
+- src/history.js — ancestors on one path are never equal to each other (commit refuses to create a duplicate of an ancestor), so "which equal ancestor" never needs a tie-break — me
+- src/treeView.js — tree drawn as nested lists with buttons; current = filled, path to root = outlined; shape left open by §2-5 — me
 - index.html — layout (two columns: 실제 영역 | 테스트 영역; below: history | debug; sticky control bar) is mine; spec §2-5 says shapes are decided after he sees it — me
 - server.js:12 — serves only index.html, style.css, src/*.js (allowlist after Codex r1+r2 found Windows name aliases); add a pattern if the page ever needs another file — me
 - server.js:62 — port 5173 (PORT env overrides), binds 127.0.0.1 only — me

@@ -91,3 +91,15 @@ test('the warning also follows edits that come from the preview', () => {
   assert.equal(source.value, '<p>closed</p>');
   assert.equal(doc.getElementById('warning').textContent, '');
 });
+
+// Goal scope 5 / §2-2: on load the tree shows one version and the move log starts with it.
+test('on load the tree shows v1 as the current version and the move log is "v1"', () => {
+  const { doc } = loadPage({ mount: true });
+  const buttons = doc.getElementById('tree').querySelectorAll('button');
+  assert.equal(buttons.length, 1);
+  assert.equal(buttons[0].textContent, 'v1');
+  assert.equal(buttons[0].classList.contains('current'), true);
+  assert.equal(doc.getElementById('movelog').textContent, 'v1');
+  assert.equal(doc.getElementById('back').disabled, true);
+  assert.equal(doc.getElementById('forward').disabled, true);
+});
