@@ -10,6 +10,7 @@
 //   it is HTML again, where "/>" closes only void tags (the parser ignores it on <div/>) — Codex batch r1, fix r2
 // - an opening tag cut off at the end ("<div", '<div title="x') counts as unclosed
 // - crossed tags `<b><i></b></i>`: at </b>, <i> is reported unclosed; the later </i> is then stray
+// - spec §3-3 Q14: a key repeated among siblings (same parent, or both at the top) is warned on the repeating tag
 
 const VOID = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr']);
 const RAW_TEXT = new Set(['script', 'style', 'textarea', 'title', 'xmp', 'iframe', 'noembed', 'noframes']);
@@ -61,6 +62,15 @@ function contextOf(stack) {
   return 'html';
 }
 
+// The value of a "key" attribute in a tag's attribute text, or null. Attribute names are case-insensitive in HTML;
+// a bare `key` means key="".
+const KEY_ATTR = /(?:^|\s)key(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?(?=[\s/]|$)/i;
+function keyIn(attrText) {
+  const m = KEY_ATTR.exec(attrText);
+  if (!m) return null;
+  return m[1] ?? m[2] ?? m[3] ?? '';
+}
+
 function isKnown(tag, context) {
   if (tag.includes('-') && context === 'html') return true;
   if (context === 'svg') return SVG_NAMES.has(tag);
@@ -70,7 +80,8 @@ function isKnown(tag, context) {
 
 export function lintHtml(text) {
   const warnings = [];
-  const stack = []; // { tag, line }
+  const stack = []; // { tag, line, keys }
+  const topKeys = new Set(); // keys seen among top-level siblings
   TOKEN.lastIndex = 0;
   let m;
   let lastEnd = 0; // end of what has been read, so the cut-off check never looks inside a token or raw text
@@ -84,6 +95,12 @@ export function lintHtml(text) {
     if (!closing) {
       const context = contextOf(stack);
       if (!isKnown(tag, context)) warnings.push({ kind: 'unknown', tag, line });
+      const key = keyIn(m[3]);
+      if (key !== null) {
+        const siblings = stack.length > 0 ? stack[stack.length - 1].keys : topKeys;
+        if (siblings.has(key)) warnings.push({ kind: 'dupkey', tag, key, line });
+        else siblings.add(key);
+      }
       // "/>" closes a tag in SVG/MathML (and on <svg/>, <math/> themselves); in HTML the parser ignores the slash.
       const foreignTag = context !== 'html' || tag === 'svg' || tag === 'math';
       const selfClosed = foreignTag && /\/\s*$/.test(m[3]);
@@ -102,7 +119,7 @@ export function lintHtml(text) {
         lastEnd = close.lastIndex;
         continue;
       }
-      stack.push({ tag, line });
+      stack.push({ tag, line, keys: new Set() });
       continue;
     }
 
@@ -125,13 +142,14 @@ export function lintHtml(text) {
   return warnings.sort((a, b) => a.line - b.line);
 }
 
-const NAMES = { unclosed: '닫히지 않은 태그', unknown: '모르는 태그', stray: '짝 없는 닫는 태그' };
+const NAMES = { unclosed: '닫히지 않은 태그', unknown: '모르는 태그', stray: '짝 없는 닫는 태그', dupkey: '겹친 key' };
 
 // The one line shown under the text box.
 export function warningLine(warnings) {
   if (warnings.length === 0) return '';
   const w = warnings[0];
-  const shown = w.kind === 'stray' ? `</${w.tag}>` : `<${w.tag}>`;
+  let shown = w.kind === 'stray' ? `</${w.tag}>` : `<${w.tag}>`;
+  if (w.kind === 'dupkey') shown = `${JSON.stringify(w.key)} ${shown}`;
   const more = warnings.length > 1 ? ` (외 ${warnings.length - 1}개)` : '';
   return `${w.line}번째 줄: ${NAMES[w.kind]} ${shown}${more}`;
 }

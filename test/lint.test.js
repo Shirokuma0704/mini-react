@@ -111,3 +111,27 @@ test('a typo in an SVG tag name is unknown', () => {
 test('an unclosed <script> does not make its text look like a cut-off tag', () => {
   assert.deepEqual(kinds('<script>const x = "<div'), ['unclosed:script']);
 });
+
+// Spec §3-3 Q14: "한 목록 안에서 key가 겹치면 경고 줄에 알린다. 수정은 막지 않는다."
+// "한 목록" = siblings under the same parent. The warning sits on the line of the SECOND (repeating) one.
+test('duplicate key among siblings is warned on the repeating one', () => {
+  assert.deepEqual(lintHtml('<ul>\n  <li key="a">밥</li>\n  <li key="a">국</li>\n</ul>'), [{ kind: 'dupkey', tag: 'li', key: 'a', line: 3 }]);
+});
+
+test('the same key under different parents is fine', () => {
+  assert.deepEqual(lintHtml('<ul><li key="a">x</li></ul><ol><li key="a">y</li></ol>'), []);
+  assert.deepEqual(lintHtml('<ul><li key="a"><b key="a">x</b></li></ul>'), []);
+});
+
+test('key values are compared exactly; quotes, single quotes, unquoted and upper-case KEY all count', () => {
+  assert.deepEqual(kinds(`<p key=a></p><p key='a'></p><p KEY="a"></p>`), ['dupkey:p', 'dupkey:p']);
+  assert.deepEqual(kinds('<p key="a"></p><p key="A"></p><p data-key="a"></p>'), []);
+});
+
+test('top-level siblings (no parent tag) count as one list too', () => {
+  assert.deepEqual(kinds('<li key="1">a</li>\n<li key="1">b</li>'), ['dupkey:li']);
+});
+
+test('warningLine shows the repeated key', () => {
+  assert.equal(warningLine(lintHtml('<ul><li key="a">밥</li><li key="a">국</li></ul>')), '1번째 줄: 겹친 key "a" <li>');
+});

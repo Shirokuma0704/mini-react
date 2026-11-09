@@ -20,8 +20,9 @@ this run by his choice; rows 2-9 are all "ahead" until he checks them.
 | 9 | debug panel colored from the diff result (scope 6, spec §2-3) | 8 | 136/136 pass (test-run-12.log) | batch r1: quotes in attr values made 2 different attr sets look the same → JSON form, tested; r2 (fix-batch-r2.md): sample + debug fixes confirmed; lint still missed cut-off quoted values, foreignObject = HTML, SVG typos, raw-text cut-off; CSS test lacked min-width → all fixed + tested (8ed1189 follow-up); r3 (fix-batch-r3.md): OK | see git log | | jungle-notes/mini-react/디버그 칸.md |
 | 10 | REAL diff + patch (spec §3) + debug panel learns the 4 kinds + 실제 영역 drops keys | 8, 9 | 181/181 pass (test-run-17.log; diff 23, patch 10 incl. 400 random list pairs, debugView 14) | SKIPPED by 상철님 11-09 14:28 ("이번엔 생략") after the usage limit ("codex한도를 다써서 검증이 안되긴해"); tests + real-browser check only | see git log | | jungle-notes/mini-react/diff와 patch.md |
 | 11 | history "same version" = diff returned [] (spec §3-4 Q15) | 10 | 182/182 pass (test-run-18.log) | NOT RUN: usage limit (see row 10) | see git log | | jungle-notes/mini-react/히스토리 트리.md (one line added) |
+| 12 | duplicate-key warning line (spec §3-3 Q14) | 5 | 189/189 pass (test-run-20.log) | NOT RUN: usage limit | see git log | | jungle-notes/mini-react/깨진 HTML 경고.md (one line added) |
 
-Next features (spec §3, after 10; one commit each): 12 duplicate-key warning line (§3-3 Q14) · 13 samples with keys (§2-5).
+Next feature: 13 samples with keys (§2-5).
 
 Run of 11-09 after the diff grill: normal orchestrate stops again (the "끝까지 쭉" suspension was for the goal run only). 11-09 14:28 상철님 "11~13번 계속": rows 11-13 built back to back, one handoff at the end; Codex not run (usage limit).
 
@@ -92,3 +93,5 @@ Raw replies: docs/agent/codex/<feature>-r<round>.md (model gpt-6.1-sol, reasonin
 - src/debugView.js:13 — reach: insert/remove/replace/move color the node and its inside; text/attrs changes only the node's own lines; most specific change wins on overlap — me
 - src/app.js — load: v1 = htmlToVdom(sample 1 text), then 실제 영역 drawn from v1 without keys. Before: v1 was read back from 실제 영역, which would lose keys now. Spec §2 order "실제 영역의 샘플 HTML → VDOM" is kept in spirit (same content), not literally — me
 - spec §3-5 "핵심 5가지 경우" — not checked against the assignment text; 3-1 covers the common tutorial five (guess) — me
+- src/lint.js:67 — duplicate key is read from the tag's attribute TEXT with a regex, so " key=a" written INSIDE another quoted value (title="x key=a") is a false warning. Rare; a full attribute parser would fix it — me
+- src/lint.js — "한 목록" = siblings under the same parent tag, or all top-level tags; the warning sits on the repeating tag's line, the first one is not warned — me
