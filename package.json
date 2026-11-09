@@ -4,7 +4,8 @@
   "description": "바닐라 JS로 만드는 미니 React: 실제 DOM → VDOM → diff → patch, 그리고 hooks",
   "main": "index.js",
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "start": "node server.js"
   },
   "keywords": [],
   "author": "",

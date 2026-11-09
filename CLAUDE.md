@@ -10,6 +10,7 @@ This is his real mini React build (from 11-09), grown from the 11-06 trial run (
 
 ## Commands
 - Test: `npm test` (= `node --test`, Node v24; jsdom 31 as devDependency for a DOM)
+- Run: `npm start` → http://localhost:5173/ (server.js, Node http only; PORT env overrides). ES modules do not load from file://
 - Source is ES modules (`"type": "module"`) so it can later run in a browser unchanged.
 
 ## Docs

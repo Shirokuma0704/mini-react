@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>mini-react 검증 페이지</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header class="top">
+    <h1>mini-react 검증 페이지</h1>
+    <p class="kicker">Phase 1 · 실제 DOM → VDOM → diff → patch</p>
+  </header>
+
+  <nav class="controls" aria-label="조작">
+    <button id="patch" type="button" class="primary">Patch</button>
+    <button id="back" type="button">← 뒤로가기</button>
+    <button id="forward" type="button">앞으로가기 →</button>
+    <span class="sep" aria-hidden="true"></span>
+    <span id="samples" class="samples" role="group" aria-label="샘플"></span>
+    <output id="status" class="status" aria-live="polite"></output>
+  </nav>
+
+  <main class="areas">
+    <section class="panel">
+      <h2>실제 영역 <span class="hint">patch가 바꾸는 곳</span></h2>
+      <div id="actual" class="render"></div>
+    </section>
+
+    <section class="panel">
+      <h2>테스트 영역 <span class="hint">글자 칸이 기준이에요</span></h2>
+      <label class="sub" for="source">HTML 글자 칸</label>
+      <textarea id="source" spellcheck="false" autocomplete="off"></textarea>
+      <p id="warning" class="warning" role="status"></p>
+      <p class="sub">미리보기 <span class="hint">여기서 고쳐도 돼요</span></p>
+      <div id="preview" class="render" contenteditable="true"></div>
+    </section>
+  </main>
+
+  <section class="lower">
+    <section class="panel">
+      <h2>히스토리</h2>
+      <div id="tree" class="tree"></div>
+      <p class="sub">이동 로그</p>
+      <p id="movelog" class="movelog"></p>
+    </section>
+
+    <section class="panel">
+      <h2>디버그 칸 <span class="hint">diff 결과로 색칠해요</span></h2>
+      <div class="debug">
+        <div>
+          <p class="sub">이전</p>
+          <pre id="debug-old" class="code"></pre>
+        </div>
+        <div>
+          <p class="sub">새 것</p>
+          <pre id="debug-new" class="code"></pre>
+        </div>
+      </div>
+    </section>
+  </section>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
