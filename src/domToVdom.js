@@ -38,7 +38,7 @@ export function domToVdom(domNode) {
     return { kind: 'element', tag: domNode.localName, attrs, children };
   }
 
-  // Comments, processing instructions etc.: the spec only defines text and element, so they are dropped.
-  // OPEN QUESTION for 상철님 (see docs/agent/progress.md).
+  // Comments, processing instructions etc. are dropped (상철님's decision 11-09: they draw nothing, no need to carry them).
+  // Patch must not assume VDOM child index == real DOM childNodes index (see docs/agent/progress.md).
   return null;
 }
