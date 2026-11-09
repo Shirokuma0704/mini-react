@@ -11,19 +11,10 @@ import { JSDOM } from 'jsdom';
 import { diff } from '../src/diff.js';
 import { patch } from '../src/patch.js';
 import { htmlToVdom, containerToVdom, renderInto } from '../src/render.js';
+import { stripKeys } from './helpers/vdom.js';
 
 const doc = new JSDOM('<!DOCTYPE html><body></body>').window.document;
 const v = (html) => htmlToVdom(html, doc);
-
-// The VDOM without "key" attributes: what 실제 영역 should read back as.
-function stripKeys(node) {
-  if (node.kind === 'text') return node;
-  const attrs = {};
-  for (const [k, val] of Object.entries(node.attrs)) {
-    if (k !== 'key') Object.defineProperty(attrs, k, { value: val, enumerable: true, writable: true, configurable: true });
-  }
-  return { kind: 'element', tag: node.tag, attrs, children: node.children.map(stripKeys) };
-}
 
 function area(root) {
   const el = doc.createElement('div');

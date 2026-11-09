@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import { loadPage } from './helpers/page.js';
 import { SAMPLES } from '../src/samples.js';
 import { htmlToVdom, containerToVdom } from '../src/render.js';
+import { stripKeys } from './helpers/vdom.js';
 
 function page() {
   const p = loadPage({ mount: true });
@@ -25,7 +26,7 @@ test('load: sample 1 is in the text box, the preview and 실제 영역; history 
   const p = page();
   assert.equal(p.$('source').value, SAMPLES[0].html);
   assert.deepEqual(containerToVdom(p.$('preview')), p.sampleVdom(0));
-  assert.deepEqual(p.actualVdom(), p.sampleVdom(0));
+  assert.deepEqual(p.actualVdom(), stripKeys(p.sampleVdom(0))); // 실제 영역 has no keys (§3-3 Q12)
   assert.equal(p.$('movelog').textContent, 'v1');
   assert.equal(p.$('back').disabled, true);
   assert.equal(p.$('forward').disabled, true);
@@ -36,21 +37,21 @@ test('sample 1 -> edit -> Patch -> back -> forward', () => {
   const edited = SAMPLES[0].html.replace('오늘 할 일', '내일 할 일');
   p.edit(edited);
   // Before Patch, 실제 영역 is unchanged.
-  assert.deepEqual(p.actualVdom(), p.sampleVdom(0));
+  assert.deepEqual(p.actualVdom(), stripKeys(p.sampleVdom(0))); // 실제 영역 has no keys (§3-3 Q12)
 
   p.$('patch').click();
-  assert.deepEqual(p.actualVdom(), htmlToVdom(edited, p.doc));
+  assert.deepEqual(p.actualVdom(), stripKeys(htmlToVdom(edited, p.doc))); // 실제 영역 has no keys (§3-3 Q12)
   assert.match(p.$('actual').querySelector('h2').textContent, /내일 할 일/);
   assert.equal(p.$('movelog').textContent, 'v1 → v2');
 
   p.$('back').click();
-  assert.deepEqual(p.actualVdom(), p.sampleVdom(0));
+  assert.deepEqual(p.actualVdom(), stripKeys(p.sampleVdom(0))); // 실제 영역 has no keys (§3-3 Q12)
   assert.equal(p.$('source').value, SAMPLES[0].html); // test area changes together
   assert.deepEqual(containerToVdom(p.$('preview')), p.sampleVdom(0));
   assert.equal(p.$('forward').disabled, false);
 
   p.$('forward').click();
-  assert.deepEqual(p.actualVdom(), htmlToVdom(edited, p.doc));
+  assert.deepEqual(p.actualVdom(), stripKeys(htmlToVdom(edited, p.doc))); // 실제 영역 has no keys (§3-3 Q12)
   assert.equal(p.$('source').value, edited);
   assert.equal(p.$('movelog').textContent, 'v1 → v2 → v1 → v2');
 });
@@ -67,10 +68,10 @@ test('sample 2 button fills the test area only (§2-4); Patch then makes v2', ()
   const btn = [...p.$('samples').querySelectorAll('button')].find((b) => b.textContent === '샘플 2');
   btn.click();
   assert.equal(p.$('source').value, SAMPLES[1].html);
-  assert.deepEqual(p.actualVdom(), p.sampleVdom(0));
+  assert.deepEqual(p.actualVdom(), stripKeys(p.sampleVdom(0))); // 실제 영역 has no keys (§3-3 Q12)
   assert.equal(p.$('movelog').textContent, 'v1');
   p.$('patch').click();
-  assert.deepEqual(p.actualVdom(), p.sampleVdom(1));
+  assert.deepEqual(p.actualVdom(), stripKeys(p.sampleVdom(1))); // 실제 영역 has no keys (§3-3 Q12)
   assert.equal(p.$('movelog').textContent, 'v1 → v2');
 });
 
@@ -96,7 +97,7 @@ test('branching and clicking the tree', () => {
   const btn = (label) => [...p.$('tree').querySelectorAll('button')].find((b) => b.textContent === label);
   assert.ok(btn('v2') && btn('v3'));
   btn('v2').click();
-  assert.deepEqual(p.actualVdom(), htmlToVdom('<p>x</p>', p.doc));
+  assert.deepEqual(p.actualVdom(), stripKeys(htmlToVdom('<p>x</p>', p.doc))); // 실제 영역 has no keys (§3-3 Q12)
   assert.equal(p.$('source').value, '<p>x</p>');
   assert.equal(p.$('movelog').textContent, 'v1 → v2 → v1 → v3 → v2');
 });
@@ -166,4 +167,29 @@ test('status line: new version, and the move to an equal ancestor, are both anno
   p.edit(SAMPLES[0].html);
   p.$('patch').click();
   assert.match(p.$('status').textContent, /옮겨 갔어요 → v1$/);
+});
+
+// Spec §3-3 Q12/Q13 with the keyed sample 1: keys live in the text box and the preview, never in 실제 영역.
+test('load: 실제 영역 has no key attributes; the text box and the preview keep them', () => {
+  const p = page();
+  assert.ok(p.$('source').value.includes('key="'));
+  assert.ok(p.$('preview').querySelector('[key]'));
+  assert.equal(p.$('actual').querySelector('[key]'), null);
+});
+
+// "바뀐 부분만": with keys, moving an item is a move of the SAME element in 실제 영역, not a redraw.
+test('keyed sample 1: move the last li to the front, Patch → that li element is reused, the others too', () => {
+  const p = page();
+  const before = [...p.$('actual').querySelectorAll('ul li')];
+  const wrapper = p.doc.createElement('div');
+  wrapper.innerHTML = SAMPLES[0].html;
+  const ul = wrapper.querySelector('ul');
+  const lis = ul.querySelectorAll('li');
+  ul.insertBefore(lis[lis.length - 1], lis[0]);
+  p.edit(wrapper.innerHTML);
+  p.$('patch').click();
+  const after = [...p.$('actual').querySelectorAll('ul li')];
+  assert.equal(after[0], before[before.length - 1]);
+  assert.deepEqual(new Set(after), new Set(before));
+  assert.deepEqual(p.actualVdom(), stripKeys(htmlToVdom(wrapper.innerHTML, p.doc)));
 });

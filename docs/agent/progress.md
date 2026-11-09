@@ -21,8 +21,9 @@ this run by his choice; rows 2-9 are all "ahead" until he checks them.
 | 10 | REAL diff + patch (spec §3) + debug panel learns the 4 kinds + 실제 영역 drops keys | 8, 9 | 181/181 pass (test-run-17.log; diff 23, patch 10 incl. 400 random list pairs, debugView 14) | SKIPPED by 상철님 11-09 14:28 ("이번엔 생략") after the usage limit ("codex한도를 다써서 검증이 안되긴해"); tests + real-browser check only | see git log | | jungle-notes/mini-react/diff와 patch.md |
 | 11 | history "same version" = diff returned [] (spec §3-4 Q15) | 10 | 182/182 pass (test-run-18.log) | NOT RUN: usage limit (see row 10) | see git log | | jungle-notes/mini-react/히스토리 트리.md (one line added) |
 | 12 | duplicate-key warning line (spec §3-3 Q14) | 5 | 189/189 pass (test-run-20.log) | NOT RUN: usage limit | see git log | | jungle-notes/mini-react/깨진 HTML 경고.md (one line added) |
+| 13 | sample 1's list gets keys (spec §2-5 "key를 넣은 샘플"); page tests read 실제 영역 without keys | 7, 10 | 193/193 pass (test-run-21.log) | NOT RUN: usage limit | see git log | | jungle-notes/mini-react/샘플.md (one line added) |
 
-Next feature: 13 samples with keys (§2-5).
+Rows 11-13 browser check (11-09, Claude app built-in browser, script-driven): sample 1 → move the 3rd li to the front → Patch → 실제 영역 has no key attribute, the moved li is the same element, all li reused, debug shows it yellow; typing duplicate keys → warning line "1번째 줄: 겹친 key "a" <li>".
 
 Run of 11-09 after the diff grill: normal orchestrate stops again (the "끝까지 쭉" suspension was for the goal run only). 11-09 14:28 상철님 "11~13번 계속": rows 11-13 built back to back, one handoff at the end; Codex not run (usage limit).
 
@@ -73,7 +74,7 @@ Raw replies: docs/agent/codex/<feature>-r<round>.md (model gpt-6.1-sol, reasonin
 - src/history.js:53 — (임시 rule) arriving anywhere, including a tree click deep in a branch, marks every fork on its path as "last visited" toward it; forward goes one step along that — me
 - src/history.js — ancestors on one path are never equal to each other (commit refuses to create a duplicate of an ancestor), so "which equal ancestor" never needs a tie-break — me
 - src/treeView.js — tree drawn as nested lists with buttons; current = filled, path to root = outlined; shape left open by §2-5 — me
-- src/samples.js — SAMPLE CONTENT IS MINE, NOT HIS (§2-5 left it open): todo card (ul with data-id/class, b inside li, a href/title) and a post (header, ol with a nested ul, code/em, hr, br). Chosen to give the 5 diff cases something to bite; replace freely — me
+- src/samples.js — SAMPLE CONTENT IS MINE, NOT HIS (§2-5 left it open): todo card (ul with key/class since row 13 — data-id replaced by key, b inside li, a href/title) and a post (header, ol with a nested ul, code/em, hr, br). Chosen to give the 5 diff cases something to bite; replace freely — me
 - src/app.js — load = sample 1 drawn into 실제 영역 first, then v1 = containerToVdom(실제 영역), then the test area is drawn from v1 (follows the assignment order "실제 영역의 샘플 HTML → VDOM → 테스트 영역") — me
 - src/app.js:80 — Patch never rewrites the text box (the user's text stays, comments included); back/forward/tree click rewrite the text box and preview from the version's VDOM — me
 - src/app.js:80 — when Patch moves to an equal ancestor (§2-2), 실제 영역 is patched to that version too — me
@@ -95,3 +96,4 @@ Raw replies: docs/agent/codex/<feature>-r<round>.md (model gpt-6.1-sol, reasonin
 - spec §3-5 "핵심 5가지 경우" — not checked against the assignment text; 3-1 covers the common tutorial five (guess) — me
 - src/lint.js:67 — duplicate key is read from the tag's attribute TEXT with a regex, so " key=a" written INSIDE another quoted value (title="x key=a") is a false warning. Rare; a full attribute parser would fix it — me
 - src/lint.js — "한 목록" = siblings under the same parent tag, or all top-level tags; the warning sits on the repeating tag's line, the first one is not warned — me
+- test/flow.test.js, test/samples.test.js — TEST FILES CHANGED in row 13: comparisons of 실제 영역 with a version now strip keys first (test/helpers/vdom.js stripKeys), because spec §3-3 Q12 says 실제 영역 never shows keys. No assertion was dropped — me

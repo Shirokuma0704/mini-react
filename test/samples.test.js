@@ -8,6 +8,7 @@ import { SAMPLES } from '../src/samples.js';
 import { lintHtml } from '../src/lint.js';
 import { htmlToVdom, rootToHtml, containerToVdom } from '../src/render.js';
 import { loadPage } from './helpers/page.js';
+import { stripKeys } from './helpers/vdom.js';
 
 const doc = new JSDOM('<!DOCTYPE html><body></body>').window.document;
 
@@ -36,9 +37,22 @@ test('load: sample 1 is in 실제 영역, the text box and the preview (§2-4, s
   const { doc: pageDoc } = loadPage({ mount: true });
   const expected = htmlToVdom(SAMPLES[0].html, pageDoc);
   assert.equal(pageDoc.getElementById('source').value, SAMPLES[0].html);
-  assert.deepEqual(containerToVdom(pageDoc.getElementById('actual')), expected);
+  assert.deepEqual(containerToVdom(pageDoc.getElementById('actual')), stripKeys(expected)); // no keys there (§3-3 Q12)
   assert.deepEqual(containerToVdom(pageDoc.getElementById('preview')), expected);
   assert.equal(pageDoc.getElementById('warning').textContent, '');
+});
+
+// Spec §2-5 (11-09 after the diff grill): "key를 넣은 샘플이 필요하다". Sample 1's list is keyed, so the page can
+// show key pairing (§3-2); sample 2 keeps one list without keys, so 양 끝 잘라내기 can be seen too.
+test('sample 1 has a list whose items all have keys; sample 2 has a list without keys', () => {
+  const w = doc.createElement('div');
+  w.innerHTML = SAMPLES[0].html;
+  const items = [...w.querySelector('ul').children];
+  assert.ok(items.length >= 3);
+  assert.ok(items.every((li) => li.hasAttribute('key')));
+  assert.equal(new Set(items.map((li) => li.getAttribute('key'))).size, items.length, 'no duplicate keys');
+  w.innerHTML = SAMPLES[1].html;
+  assert.ok([...w.querySelectorAll('ul, ol')].some((list) => [...list.children].every((li) => !li.hasAttribute('key'))));
 });
 
 test('one button per sample, in order', () => {
