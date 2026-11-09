@@ -92,3 +92,22 @@ test('any tag name inside <svg> or <math> is not "unknown" (SVG/MathML have too 
   assert.deepEqual(lintHtml('<math><mmultiscripts><mi>x</mi></mmultiscripts></math>'), []);
   assert.deepEqual(kinds('<svg></svg><filter></filter>'), ['unknown:filter']); // outside svg it is unknown again
 });
+
+// Codex fix-batch r2.
+test('a tag cut off inside a quoted attribute value is reported', () => {
+  assert.deepEqual(kinds('<div title="'), ['unclosed:div']);
+  assert.deepEqual(kinds("<div title='hello"), ['unclosed:div']);
+});
+
+test('inside <foreignObject> it is HTML again: unknown names and <div/> are flagged', () => {
+  assert.deepEqual(kinds('<svg><foreignObject><dvi></dvi></foreignObject></svg>'), ['unknown:dvi']);
+  assert.deepEqual(kinds('<svg><foreignObject><div/></foreignObject></svg>'), ['unclosed:div']);
+});
+
+test('a typo in an SVG tag name is unknown', () => {
+  assert.deepEqual(kinds('<svg><filtter /></svg>'), ['unknown:filtter']);
+});
+
+test('an unclosed <script> does not make its text look like a cut-off tag', () => {
+  assert.deepEqual(kinds('<script>const x = "<div'), ['unclosed:script']);
+});

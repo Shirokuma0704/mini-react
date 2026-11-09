@@ -112,4 +112,5 @@ test('CSS: grid columns and debug columns are allowed to shrink below their cont
   const css = await readFile(new URL('../style.css', import.meta.url), 'utf8');
   assert.match(css, /\.debug \{[^}]*grid-template-columns: minmax\(0, 1fr\) minmax\(0, 1fr\)/);
   assert.match(css, /\.areas, \.lower \{[^}]*grid-template-columns: minmax\(0, 1fr\) minmax\(0, 1fr\)/);
+  assert.match(css, /\.debug > div \{ min-width: 0; \}/); // Codex fix-batch r2: the name promised this, the test lacked it
 });

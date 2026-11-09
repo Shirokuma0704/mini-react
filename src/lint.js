@@ -5,16 +5,19 @@
 //
 // Choices the spec does not make (docs/agent/progress.md "Open"):
 // - every non-void tag needs its closing tag, even <li> and <p> where HTML allows leaving it out
-// - names with a dash are custom elements → never "unknown"; inside <svg>/<math> any name is accepted (too many to
-//   list, Codex batch-after-limit) and "/>" closes a tag; outside them "/>" closes only void tags, like the parser
-// - an opening tag cut off at the end ("<div" with no ">") counts as unclosed
+// - names with a dash are custom elements → never "unknown"
+// - inside <svg>/<math> names are checked against the SVG/MathML lists and "/>" closes a tag; inside <foreignObject>
+//   it is HTML again, where "/>" closes only void tags (the parser ignores it on <div/>) — Codex batch r1, fix r2
+// - an opening tag cut off at the end ("<div", '<div title="x') counts as unclosed
 // - crossed tags `<b><i></b></i>`: at </b>, <i> is reported unclosed; the later </i> is then stray
 
 const VOID = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr']);
 const RAW_TEXT = new Set(['script', 'style', 'textarea', 'title', 'xmp', 'iframe', 'noembed', 'noframes']);
 
-// HTML Living Standard element names, plus common obsolete ones browsers still know, plus SVG and MathML.
-const KNOWN = new Set(`
+const words = (s) => new Set(s.trim().split(/\s+/).map((w) => w.toLowerCase()));
+
+// HTML Living Standard element names, plus common obsolete ones browsers still know, plus svg and math themselves.
+const HTML_NAMES = words(`
 a abbr address area article aside audio b base bdi bdo blockquote body br button canvas caption cite code col
 colgroup data datalist dd del details dfn dialog div dl dt em embed fieldset figcaption figure footer form h1 h2 h3
 h4 h5 h6 head header hgroup hr html i iframe img input ins kbd label legend li link main map mark menu meta meter
@@ -22,13 +25,24 @@ nav noscript object ol optgroup option output p picture pre progress q rp rt rub
 select slot small source span strong style sub summary sup table tbody td template textarea tfoot th thead time
 title tr track u ul var video wbr
 acronym big center font marquee nobr strike tt xmp listing plaintext noembed noframes
-svg g path circle ellipse line polyline polygon rect text tspan defs use symbol title desc lineargradient
-radialgradient stop clippath mask pattern image foreignobject marker
-math mi mn mo ms mtext mrow mfrac msqrt mroot msub msup msubsup mtable mtr mtd semantics annotation annotation-xml
-`.trim().split(/\s+/));
+svg math`);
+
+// SVG 2 element names (W3C SVG 2 element index) and MathML Core element names.
+const SVG_NAMES = words(`
+a animate animateMotion animateTransform circle clipPath defs desc ellipse feBlend feColorMatrix
+feComponentTransfer feComposite feConvolveMatrix feDiffuseLighting feDisplacementMap feDistantLight feDropShadow
+feFlood feFuncA feFuncB feFuncG feFuncR feGaussianBlur feImage feMerge feMergeNode feMorphology feOffset
+fePointLight feSpecularLighting feSpotLight feTile feTurbulence filter foreignObject g image line linearGradient
+marker mask metadata mpath path pattern polygon polyline radialGradient rect script set stop style svg switch
+symbol text textPath title tspan use view`);
+const MATH_NAMES = words(`
+math maction annotation annotation-xml menclose merror mfenced mfrac mi mmultiscripts mn mo mover mpadded mphantom
+mprescripts mroot mrow ms mspace msqrt mstyle msub msubsup msup mtable mtd mtext mtr munder munderover none semantics`);
 
 // One token: a comment, a doctype/other <! … >, or a tag with quoted attribute values allowed to hold ">".
 const TOKEN = /<!--[\s\S]*?(?:-->|$)|<![^>]*>?|<(\/?)([a-zA-Z][^\s/>]*)((?:[^>"']|"[^"]*"|'[^']*')*)>/g;
+// An opening tag cut off at the end of the text, possibly inside an unfinished quoted value.
+const CUT_OFF = /<([a-zA-Z][^\s/>]*)(?:[^>"']|"[^"]*"|'[^']*')*(?:"[^"]*|'[^']*)?$/;
 
 function lineAt(text, index) {
   let line = 1;
@@ -36,12 +50,30 @@ function lineAt(text, index) {
   return line;
 }
 
+// Which language the next tag is in: the nearest <svg>, <math> or <foreignObject> above it decides.
+function contextOf(stack) {
+  for (let i = stack.length - 1; i >= 0; i--) {
+    const t = stack[i].tag;
+    if (t === 'svg') return 'svg';
+    if (t === 'math') return 'math';
+    if (t === 'foreignobject') return 'html';
+  }
+  return 'html';
+}
+
+function isKnown(tag, context) {
+  if (tag.includes('-') && context === 'html') return true;
+  if (context === 'svg') return SVG_NAMES.has(tag);
+  if (context === 'math') return MATH_NAMES.has(tag);
+  return HTML_NAMES.has(tag);
+}
+
 export function lintHtml(text) {
   const warnings = [];
   const stack = []; // { tag, line }
   TOKEN.lastIndex = 0;
   let m;
-  let lastEnd = 0; // end of the last token read, so the cut-off check below never looks inside one
+  let lastEnd = 0; // end of what has been read, so the cut-off check never looks inside a token or raw text
   while ((m = TOKEN.exec(text)) !== null) {
     lastEnd = TOKEN.lastIndex;
     if (m[2] === undefined) continue; // comment or <!…>
@@ -50,18 +82,20 @@ export function lintHtml(text) {
     const line = lineAt(text, m.index);
 
     if (!closing) {
-      const foreign = stack.some((s) => s.tag === 'svg' || s.tag === 'math');
-      if (!foreign && !KNOWN.has(tag) && !tag.includes('-')) warnings.push({ kind: 'unknown', tag, line });
-      // "<div/>" does not close a div in HTML (the parser ignores the slash); it does in SVG/MathML.
-      const selfClosed = (foreign || tag === 'svg' || tag === 'math') && /\/\s*$/.test(m[3]);
+      const context = contextOf(stack);
+      if (!isKnown(tag, context)) warnings.push({ kind: 'unknown', tag, line });
+      // "/>" closes a tag in SVG/MathML (and on <svg/>, <math/> themselves); in HTML the parser ignores the slash.
+      const foreignTag = context !== 'html' || tag === 'svg' || tag === 'math';
+      const selfClosed = foreignTag && /\/\s*$/.test(m[3]);
       if (VOID.has(tag) || selfClosed) continue;
-      if (RAW_TEXT.has(tag)) {
+      if (RAW_TEXT.has(tag) && context === 'html') {
         // Skip to the matching closing tag: what is inside is text, not tags.
         const close = new RegExp(`</${tag}\\s*>`, 'ig');
         close.lastIndex = TOKEN.lastIndex;
         const end = close.exec(text);
         if (!end) {
           warnings.push({ kind: 'unclosed', tag, line });
+          lastEnd = text.length; // the rest is this element's text
           break;
         }
         TOKEN.lastIndex = close.lastIndex;
@@ -85,8 +119,7 @@ export function lintHtml(text) {
   }
   for (const open of stack) warnings.push({ kind: 'unclosed', tag: open.tag, line: open.line });
 
-  // An opening tag cut off at the end ("<div" with no ">" after it), which TOKEN cannot match.
-  const cut = /<([a-zA-Z][^\s/>]*)(?:[^>"']|"[^"]*"|'[^']*')*$/.exec(text.slice(lastEnd));
+  const cut = CUT_OFF.exec(text.slice(lastEnd));
   if (cut) warnings.push({ kind: 'unclosed', tag: cut[1].toLowerCase(), line: lineAt(text, lastEnd + cut.index) });
 
   return warnings.sort((a, b) => a.line - b.line);
