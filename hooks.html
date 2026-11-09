@@ -9,7 +9,7 @@
 <body>
   <header class="top">
     <h1>mini-react 훅 확인 페이지</h1>
-    <p class="kicker">Phase 2 · FunctionComponent · useState · <a href="./index.html">Phase 1 검증 페이지로</a></p>
+    <p class="kicker">Phase 2 · FunctionComponent · useState · useEffect · <a href="./index.html">Phase 1 검증 페이지로</a></p>
   </header>
 
   <p class="lead">카드마다 버튼을 누르기 <b>전에</b> 무엇이 나올지 먼저 적어 보세요. "그린 횟수"는 컴포넌트 함수가 몇 번 실행됐는지예요. 카드 안의 화면은 모두 우리 라이브러리(h → diff → patch)가 그려요.</p>
@@ -37,6 +37,18 @@
       </ul>
       <div id="todos" class="demo"></div>
       <p class="renders">그린 횟수 <output id="todos-renders">0</output></p>
+    </section>
+
+    <section class="panel">
+      <h2>타이머 <span class="hint">useEffect · 치우는 함수 · 지켜볼 값 · 명세 4-5</span></h2>
+      <ul class="try">
+        <li>1초마다 오르는 숫자: <code>useEffect(() =&gt; { setInterval(…); return () =&gt; clearInterval(…) }, [running])</code></li>
+        <li><b>다른 상태 바꾸기</b>: 다시 그려도 <code>[running]</code>이 그대로면 타이머는 새로 안 생겨요</li>
+        <li><b>멈춤 / 다시 시작</b>: <code>running</code>이 바뀌면 치우는 함수 → 다시 실행</li>
+        <li>목록 없는 effect가 patch 다음에 본 숫자도 아래에 적혀요</li>
+      </ul>
+      <div id="timer" class="demo"></div>
+      <p class="renders">그린 횟수 <output id="timer-renders">0</output> · 켜진 타이머 <output id="timer-alive">0</output> · effect가 본 숫자 <output id="timer-saw"></output></p>
     </section>
   </main>
 

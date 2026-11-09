@@ -1,4 +1,8 @@
-// FunctionComponent + useState (feature 16).
+// FunctionComponent + useState (feature 16) + useEffect (feature 18).
+// Spec §4-5: useEffect(fn, deps) runs fn AFTER patch has really changed the screen, never while the component function
+//            runs. deps: no list = every render; [] = first render only; [a, b] = compare slot by slot with Object.is
+//            (a pointer comparison) and run again if any one differs. fn may return a cleanup function; the library calls
+//            it right before that same effect runs again (clearing what an effect set up is that effect's own job).
 // Spec §4-3: state lives in a `hooks` array outside the function; useState finds its slot by "which call am I" (cursor),
 //            and mount()/update() reset the cursor to 0 right before calling the component.
 // Spec §4-4: the setter takes a value or a function (called with the latest value); the same value (Object.is,
@@ -50,6 +54,7 @@ export class FunctionComponent {
     renderInto(container, root, doc, { keys: false });
     syncEvents(container, root);
     this.root = root;
+    this.runEffects();
   }
 
   // Re-render after a state change: diff the old root against the new one and patch only the changes.
@@ -59,6 +64,24 @@ export class FunctionComponent {
     patch(this.container, diff(this.root, root), doc);
     syncEvents(this.container, root);
     this.root = root;
+    this.runEffects();
+  }
+
+  // After drawing: go through the slots in order; for each effect marked pending, call the old cleanup, then run fn.
+  runEffects() {
+    for (const slot of this.hooks) {
+      if (slot.kind !== 'effect' || !slot.pending) continue;
+      const { fn, deps } = slot.pending;
+      slot.pending = null;
+      if (slot.cleanup) {
+        const cleanup = slot.cleanup;
+        slot.cleanup = null;
+        cleanup();
+      }
+      slot.deps = deps;
+      const result = fn();
+      if (typeof result === 'function') slot.cleanup = result;
+    }
   }
 
   // "Please re-render", batched (spec §4-4). The first set in a turn books ONE update() with queueMicrotask and raises
@@ -92,4 +115,25 @@ export function useState(initial) {
     component.requestUpdate();
   };
   return [slot.value, set];
+}
+
+// Decide during render whether the effect must run; if so just mark it pending. mount()/update() run it after drawing.
+export function useEffect(fn, deps) {
+  const component = currentComponent;
+  if (component === null) {
+    throw new Error('useEffect can only be called while a FunctionComponent is rendering');
+  }
+  const index = component.cursor++;
+  const first = index >= component.hooks.length;
+  if (first) {
+    component.hooks[index] = { kind: 'effect', deps: undefined, cleanup: null, pending: null };
+  }
+  const slot = component.hooks[index];
+  const changed =
+    first ||
+    deps === undefined ||
+    slot.deps === undefined ||
+    deps.length !== slot.deps.length ||
+    deps.some((d, i) => !Object.is(d, slot.deps[i]));
+  if (changed) slot.pending = { fn, deps };
 }

@@ -5,7 +5,7 @@
 // It is a probe for checking, not part of the component: it shows whether a set really re-ran the component
 // (spec §4-4 "같은 값이면 다시 그리지 않고 건너뛴다").
 import { h } from './h.js';
-import { FunctionComponent, useState } from './component.js';
+import { FunctionComponent, useState, useEffect } from './component.js';
 
 // Wrap a component so every run bumps a number shown in `out`.
 function countRenders(Component, out) {
@@ -107,8 +107,58 @@ function renderTodos(todos, setTodos, make) {
   ]);
 }
 
-export function mountHooksPage(doc) {
+// ---------- 타이머 (spec §4-5, the Q6-1 timer) ----------
+// Probes outside the component: how many timers are alive right now, and what the screen said when the
+// no-deps effect ran (it runs after patch, so it must see the new number).
+function makeTimer(probe, tickMs, startRunning) {
+  return function Timer() {
+    const [seconds, setSeconds] = useState(0);
+    const [running, setRunning] = useState(startRunning);
+    const [other, setOther] = useState(0);
+
+    // [running]: start a timer while running; the cleanup stops it before the next run or when running changes.
+    useEffect(() => {
+      if (!running) return undefined;
+      probe.alive(+1);
+      const id = setInterval(() => setSeconds((s) => s + 1), tickMs);
+      return () => {
+        clearInterval(id);
+        probe.alive(-1);
+      };
+    }, [running]);
+
+    // No deps: runs after every render, after patch.
+    useEffect(() => {
+      probe.saw();
+    });
+
+    return h('div', {}, [
+      h('div', { class: 'demo-row' }, [
+        h('output', { class: 'big' }, [seconds]),
+        h('button', { type: 'button', onClick: () => setRunning(!running) }, [running ? '멈춤' : '다시 시작']),
+        h('button', { type: 'button', onClick: () => setOther(other + 1) }, ['다른 상태 바꾸기']),
+        h('output', { class: 'muted' }, [`다른 상태 ${other}`]),
+      ]),
+    ]);
+  };
+}
+
+// Options are for tests: a short tick, and a timer that starts paused (there is no unmount, so a running interval
+// would keep the test process alive).
+export function mountHooksPage(doc, { tickMs = 1000, timerStartsRunning = true } = {}) {
   const byId = (id) => doc.getElementById(id);
   new FunctionComponent(countRenders(Counter, byId('counter-renders'))).mount(byId('counter'));
   new FunctionComponent(countRenders(makeTodos(), byId('todos-renders'))).mount(byId('todos'));
+
+  let alive = 0;
+  const probe = {
+    alive(delta) {
+      alive += delta;
+      byId('timer-alive').textContent = String(alive);
+    },
+    saw() {
+      byId('timer-saw').textContent = byId('timer').querySelector('.big')?.textContent ?? '';
+    },
+  };
+  new FunctionComponent(countRenders(makeTimer(probe, tickMs, timerStartsRunning), byId('timer-renders'))).mount(byId('timer'));
 }

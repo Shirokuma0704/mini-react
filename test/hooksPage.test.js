@@ -12,7 +12,7 @@ const settle = () => new Promise((r) => setTimeout(r, 0));
 function open() {
   const { window } = new JSDOM(html); // scripts in the HTML do not run here; we mount by hand
   const doc = window.document;
-  mountHooksPage(doc);
+  mountHooksPage(doc, { tickMs: 15, timerStartsRunning: false });
   const press = async (cardId, label) => {
     const btn = [...doc.querySelectorAll(`#${cardId} button`)].find((b) => b.textContent === label);
     assert.ok(btn, `button "${label}" in #${cardId}`);
@@ -97,6 +97,41 @@ test('todo card: "맨 앞 지우기" removes the first item', async () => {
   const { doc, press } = open();
   await press('todos', '맨 앞 지우기');
   assert.deepEqual([...doc.querySelectorAll('#todos li')].map((li) => li.textContent), ['할 일 2']);
+});
+
+// ---------- timer card (feature 18, useEffect) ----------
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const text = (doc, id) => doc.getElementById(id).textContent;
+
+test('timer card: starting turns ONE timer on; re-rendering by another state keeps it at one; stopping turns it off', async () => {
+  const { doc, press } = open();
+  assert.equal(text(doc, 'timer-alive'), '0'); // started paused (test option)
+  await press('timer', '다시 시작');
+  assert.equal(text(doc, 'timer-alive'), '1');
+  await press('timer', '다른 상태 바꾸기');
+  await press('timer', '다른 상태 바꾸기');
+  assert.equal(text(doc, 'timer-alive'), '1'); // [running] unchanged → no new timer
+  for (let waited = 0; Number(doc.querySelector('#timer .big').textContent) < 2 && waited < 2000; waited += 15) {
+    await sleep(15);
+  }
+  await press('timer', '멈춤'); // cleanup runs → interval cleared
+  assert.equal(text(doc, 'timer-alive'), '0');
+  const stopped = doc.querySelector('#timer .big').textContent;
+  assert.ok(Number(stopped) >= 2);
+  await sleep(60);
+  assert.equal(doc.querySelector('#timer .big').textContent, stopped); // really stopped
+});
+
+test('timer card: the no-deps effect saw the number already on screen (it runs after patch)', async () => {
+  const { doc, press } = open();
+  assert.equal(text(doc, 'timer-saw'), '0');
+  await press('timer', '다시 시작');
+  for (let waited = 0; Number(doc.querySelector('#timer .big').textContent) < 1 && waited < 2000; waited += 15) {
+    await sleep(15);
+  }
+  await press('timer', '멈춤');
+  assert.equal(text(doc, 'timer-saw'), doc.querySelector('#timer .big').textContent);
 });
 
 test('no key attribute reaches the real DOM of the cards (§3-3 Q12)', async () => {
