@@ -1,0 +1,47 @@
+
+> mini-react@1.0.0 test
+> node --test
+
+✔ whitespace in text is kept exactly (78.8795ms)
+✔ spec example: <p class="msg">hi <b>there</b> bye</p> (12.788ms)
+✔ kind tells text and element apart (8.3925ms)
+✔ children keep document order (14.9158ms)
+✔ nested nodes use the same shape at every depth (9.2959ms)
+✔ all attributes are kept as name -> value (9.5281ms)
+✔ an attribute named __proto__ is kept as an own property (7.1826ms)
+✔ element with no attributes and no children (6.4905ms)
+✔ a text node converts on its own (6.104ms)
+✔ vdomToDom builds a real element that converts back to the same VDOM (88.4206ms)
+✔ vdomToDom builds a text node for a text VDOM, keeping whitespace (9.0456ms)
+✔ vdomToDom does not interpret text as HTML (8.9615ms)
+✔ vdomToHtml writes the spec example back as the same HTML text (15.1749ms)
+✔ vdomToHtml escapes text and attribute values (0.1589ms)
+✔ vdomToHtml writes void elements without a closing tag (0.1049ms)
+✔ vdomToHtml keeps <style> text raw so it parses back the same (12.0415ms)
+✔ vdomToHtml writes an empty attribute value as name="" (0.1542ms)
+✔ htmlToVdom gives a root div holding the fragment, comments dropped (8.5892ms)
+✔ containerToVdom ignores the container element itself (id, class) and keeps only its contents (6.7716ms)
+✔ renderInto replaces a container's contents with the root's children (11.7689ms)
+✔ round trip keeps the VDOM for "<svg viewBox=\"0 0 1 1\"><foreignObject><p>x</p></foreignObject></svg>" (11.0905ms)
+✔ round trip keeps the VDOM for "<pre>\n\nx</pre>" (9.4527ms)
+✔ round trip keeps the VDOM for "<textarea>\n\nx</textarea>" (9.539ms)
+✔ round trip keeps the VDOM for "<listing>\n\nx</listing>" (6.4525ms)
+✔ round trip keeps the VDOM for "<p>a&#13;b</p>" (5.5587ms)
+✔ round trip keeps the VDOM for "<div title=\"a&#13;b\">x</div>" (8.0014ms)
+✔ round trip keeps the VDOM for "<iframe>a <b> & c</iframe>" (9.0222ms)
+✔ round trip keeps the VDOM for "<xmp>a <b> & c</xmp>" (7.3735ms)
+✔ round trip keeps the VDOM for "<noembed>a <b></noembed>" (5.5918ms)
+✔ round trip keeps the VDOM for "<noframes>a <b></noframes>" (5.4144ms)
+✔ SVG survives vdomToDom: tag and attribute case, and the SVG namespace (16.8704ms)
+✔ htmlToVdom merges text left side by side after a comment is dropped (6.0708ms)
+✔ containerToVdom merges split text nodes (as left by editing in the preview) and does not touch the container (6.7675ms)
+✔ rootToHtml joins the root children (6.5943ms)
+✔ round trip: html -> VDOM -> html -> VDOM is stable for a mixed sample (8.9588ms)
+ℹ tests 35
+ℹ suites 0
+ℹ pass 35
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1919.0492

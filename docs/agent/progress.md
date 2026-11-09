@@ -3,14 +3,39 @@
 Single source of truth for the orchestrate loop. One row per feature, in dependency order.
 "Him" is set only when 상철님 says he verified it. Features built but not "Him ✔" count as "ahead" (max 3).
 
+Run of 11-09 afternoon: goal file ../goals/01-verify-page.md ("끝까지 쭉") — build the Phase 1 verification page
+(spec-draft §2) without stopping between features; ONE handoff at the end. So the max-3-ahead stop is suspended for
+this run by his choice; rows 2-9 are all "ahead" until he checks them.
+
 | # | Feature | Depends on | Tests | Codex | Commit | Him | Why doc |
 |---|---------|------------|-------|-------|--------|-----|---------|
 | 1 | domToVdom: real DOM node → VDOM node (spec-draft §1) | — | 9/9 pass (test-run-3.log) | r1 (5.6-sol): 4 issues → 2 fixed, 1 to him, 1 process. r2 (6-astra): fixes confirmed; bookkeeping fixed; #2 resolved by him (keep whitespace) | see git log | ✔ 11-09 10:52 (printed real output for the spec example, compared with spec-draft §1: "내 의도랑 맞는거같아") | jungle-notes/mini-react/VDOM 변환.md |
+| 2 | render: VDOM → real DOM, VDOM → HTML text, html/container → root VDOM (goal scope 1) | 1 | 35/35 pass (test-run-5.log) | r1: 5 round-trip bugs (SVG, pre newline, \r, raw-text tags, merged text) → all fixed + tested; r2: r1 fixes confirmed; 4 more foreign-content/rare-tag cases → NOT fixed, in Open as disagreement; textarea test gap fixed | see git log | | jungle-notes/mini-react/렌더.md |
+| 3 | page layout + `npm start` static server (scope 2) | 2 | | | | | |
+| 4 | text box ↔ preview sync (scope 3, spec §2-1) | 2, 3 | | | | | |
+| 5 | broken-HTML warning (scope 4, spec §2-1) | 3 | | | | | |
+| 6 | history tree (pure module) + tree view + move log (scope 5, spec §2-2) | 3 | | | | | |
+| 7 | samples 1/2 (scope 7, spec §2-4) | 3, 4 | | | | | |
+| 8 | PROVISIONAL diff/patch + wire Patch / back / forward + jsdom flow test (scope 8) | 2, 6 | | | | | |
+| 9 | debug panel colored from the diff result (scope 6, spec §2-3) | 8 | | | | | |
 
-Ahead of his verification: 0/3
+Order note: debug panel (scope 6) comes after diff/patch (scope 8) because it colors from the diff result.
+
+Ahead of his verification: 1 (stop suspended for this run, see above)
+
+## Codex replies
+Raw replies: docs/agent/codex/<feature>-r<round>.md (model gpt-6.1-sol, reasoning effort high, read-only sandbox).
+
+## PROVISIONAL (replace after the diff grill, spec §2-5)
+<!-- filled by feature 8 -->
 
 ## Open disagreements / unsure spots
 <!-- file:line — what — who raised it (me / Codex) -->
 - ~~whitespace~~ RESOLVED 11-06: 상철님 "그대로 두기" → spec-draft §1 rule added, test added. Whitespace-only text between tags is therefore kept too — Codex r1 #2
 - ~~comments~~ RESOLVED 11-09: 상철님 "개발용인데 굳이 보낼 필요가 없잖아" → drop comments (src/domToVdom.js return null), spec-draft §1 rule added. Carry to the patch spec: VDOM child index ≠ real DOM childNodes index when a comment sits in between — me
 - tag names: lowercase via localName (spec example uses `p`); SVG keeps case — me
+- src/render.js:5 — a version's VDOM root is a plain `div` with no attrs wrapping the fragment; the root is never drawn, its children go into 실제 영역 / preview. Spec says "샘플 HTML → VDOM" but not what the root is — me
+- src/render.js:91 — htmlToVdom / containerToVdom merge text nodes left side by side (after dropping a comment, or split by editing in the preview). §1 says "keep the DOM text as it is" about spaces; merging is a new rule. Without it `a<!--x-->b` is 2 children but its own HTML parses back as 1, and "no change → no new version" (§2-2) would fail after preview edits — Codex render r1 #5 found it, me chose the fix. domToVdom itself is unchanged (still 1 DOM node = 1 VDOM node)
+- src/render.js:30 — VDOM has no namespace slot; vdomToDom infers SVG/MathML from the tag like the parser does — me
+- DISAGREEMENT with Codex render r2 (docs/agent/codex/render-r2.md), NOT fixed: round trips still change content for foreign content and rare tags — HTML void/raw-text/newline rules applied inside SVG (`<svg><style>`, `<svg><textarea>`), HTML integration points other than foreignObject (`svg title`, `math mtext`, `annotation-xml`), `xlink:href` namespace, `\r` inside raw-text tags, `<plaintext>`. My view: the page's samples are plain HTML (lists, attributes, nesting); fixing these means a full HTML serializer. His call whether it matters. Codex r2's textarea test gap was real and is fixed (test/render.test.js:132)
+- src/render.js:75 — HTML text is written back from the VDOM with no pretty-printing; formatting survives only because whitespace text is kept (§1) — me

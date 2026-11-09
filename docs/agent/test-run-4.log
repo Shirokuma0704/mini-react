@@ -1,0 +1,33 @@
+
+> mini-react@1.0.0 test
+> node --test
+
+✔ whitespace in text is kept exactly (91.105ms)
+✔ spec example: <p class="msg">hi <b>there</b> bye</p> (13.1682ms)
+✔ kind tells text and element apart (9.5015ms)
+✔ children keep document order (18.4735ms)
+✔ nested nodes use the same shape at every depth (6.9787ms)
+✔ all attributes are kept as name -> value (6.8527ms)
+✔ an attribute named __proto__ is kept as an own property (5.6095ms)
+✔ element with no attributes and no children (9.0057ms)
+✔ a text node converts on its own (9.4962ms)
+✔ vdomToDom builds a real element that converts back to the same VDOM (96.7965ms)
+✔ vdomToDom builds a text node for a text VDOM, keeping whitespace (11.2318ms)
+✔ vdomToDom does not interpret text as HTML (8.4851ms)
+✔ vdomToHtml writes the spec example back as the same HTML text (19.0105ms)
+✔ vdomToHtml escapes text and attribute values (0.2383ms)
+✔ vdomToHtml writes void elements without a closing tag (0.2872ms)
+✔ vdomToHtml keeps <style> text raw so it parses back the same (7.1336ms)
+✔ vdomToHtml writes an empty attribute value as name="" (0.1365ms)
+✔ htmlToVdom gives a root div holding the fragment, comments dropped (7.2903ms)
+✔ containerToVdom ignores the container element itself (id, class) and keeps only its contents (10.336ms)
+✔ renderInto replaces a container's contents with the root's children (15.2123ms)
+✔ round trip: html -> VDOM -> html -> VDOM is stable for a mixed sample (15.6142ms)
+ℹ tests 21
+ℹ suites 0
+ℹ pass 21
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1933.1778
