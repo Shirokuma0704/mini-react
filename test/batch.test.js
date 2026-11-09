@@ -180,6 +180,31 @@ test('each mounted component batches on its own', async () => {
 });
 
 test('a set made during the re-render work of a batch schedules another re-render (not lost)', async () => {
+  // The set happens INSIDE the batch's re-render (while App runs for v = 1), not after it finished.
+  // (The first version set only after awaiting the batch, so it could not catch a lost set. Codex bundle r1 F7.)
+  const { container } = setup();
+  let runs = 0;
+  let setLater;
+  let setDuring = true;
+  const App = () => {
+    runs += 1;
+    const [v, setV] = useState(0);
+    setLater = setV;
+    if (v === 1 && setDuring) {
+      setDuring = false;
+      setV(2); // called while the batched update() is rendering
+    }
+    return h('p', {}, [v]);
+  };
+  new FunctionComponent(App).mount(container);
+  setLater(1);
+  await afterMicrotask(); // batch 1 renders v = 1 and, during that render, sets 2
+  await settle();
+  assert.equal(container.textContent, '2');
+  assert.equal(runs, 3); // mount, batch 1 (v = 1), the re-render booked during it (v = 2)
+});
+
+test('a set made after a batch finished schedules a new re-render', async () => {
   const { container } = setup();
   let runs = 0;
   let setLater;
@@ -191,8 +216,8 @@ test('a set made during the re-render work of a batch schedules another re-rende
   };
   new FunctionComponent(App).mount(container);
   setLater(1);
-  await afterMicrotask(); // batch 1 has run → shows 1
-  setLater(2); // new set after the batch → a new re-render must be scheduled
+  await afterMicrotask();
+  setLater(2);
   await settle();
   assert.equal(container.textContent, '2');
   assert.equal(runs, 3);
