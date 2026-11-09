@@ -105,7 +105,9 @@ test('on load the tree shows v1 as the current version and the move log is "v1"'
 });
 
 // Found in the real-browser check (11-09): long debug lines pushed the panel past the page width.
-test('grid columns may shrink below their content (no page-wide horizontal scroll from long lines)', async () => {
+// This only checks the CSS rules are there; the layout itself was checked once in a real browser (progress.md),
+// jsdom does no layout (Codex batch-after-limit, 65e9703: the old name claimed more).
+test('CSS: grid columns and debug columns are allowed to shrink below their content (minmax(0, 1fr), min-width: 0)', async () => {
   const { readFile } = await import('node:fs/promises');
   const css = await readFile(new URL('../style.css', import.meta.url), 'utf8');
   assert.match(css, /\.debug \{[^}]*grid-template-columns: minmax\(0, 1fr\) minmax\(0, 1fr\)/);

@@ -54,7 +54,7 @@ export function mountApp(doc) {
     btn.type = 'button';
     btn.textContent = sample.name;
     btn.addEventListener('click', () => {
-      sync.setSource(sample.html);
+      sync.fillSourceOnly(sample.html);
       say(`글자 칸에 ${sample.name} 내용을 넣었어요. Patch를 눌러야 새 버전이 돼요.`);
     });
     els.samples.appendChild(btn);

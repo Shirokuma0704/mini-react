@@ -47,15 +47,32 @@ test('one button per sample, in order', () => {
   assert.deepEqual(names, SAMPLES.map((s) => s.name));
 });
 
-test('a sample button fills only the text box (and its preview); 실제 영역 and history stay (§2-4)', () => {
+// §2-4 "글자 칸만 채운다": the preview is NOT redrawn by the button (Codex batch-after-limit, 6486c27). It follows the
+// text box by the §2-1 rule (another spot / leaving the text box), or Patch flushes it.
+test('a sample button fills only the text box; preview, 실제 영역 and history stay (§2-4)', () => {
   const { doc: pageDoc } = loadPage({ mount: true });
   const actualBefore = pageDoc.getElementById('actual').innerHTML;
+  const previewBefore = pageDoc.getElementById('preview').innerHTML;
   const btn = [...pageDoc.getElementById('samples').querySelectorAll('button')][1];
   btn.click();
   assert.equal(pageDoc.getElementById('source').value, SAMPLES[1].html);
-  assert.deepEqual(containerToVdom(pageDoc.getElementById('preview')), htmlToVdom(SAMPLES[1].html, pageDoc));
+  assert.equal(pageDoc.getElementById('preview').innerHTML, previewBefore);
   assert.equal(pageDoc.getElementById('actual').innerHTML, actualBefore);
   assert.equal(pageDoc.getElementById('movelog').textContent, 'v1');
   assert.equal(pageDoc.getElementById('tree').querySelectorAll('button').length, 1);
   assert.match(pageDoc.getElementById('status').textContent, /Patch/);
+});
+
+test('after a sample button, the preview follows when the text box is left, and Patch uses the sample', () => {
+  const { doc: pageDoc, win } = loadPage({ mount: true });
+  const btn = [...pageDoc.getElementById('samples').querySelectorAll('button')][1];
+  btn.click();
+  pageDoc.getElementById('source').dispatchEvent(new win.Event('focusout', { bubbles: true }));
+  assert.deepEqual(containerToVdom(pageDoc.getElementById('preview')), htmlToVdom(SAMPLES[1].html, pageDoc));
+
+  const p2 = loadPage({ mount: true });
+  [...p2.doc.getElementById('samples').querySelectorAll('button')][1].click();
+  p2.doc.getElementById('patch').click(); // Patch flushes the pending text box edit first
+  assert.deepEqual(containerToVdom(p2.doc.getElementById('actual')), htmlToVdom(SAMPLES[1].html, p2.doc));
+  assert.deepEqual(containerToVdom(p2.doc.getElementById('preview')), htmlToVdom(SAMPLES[1].html, p2.doc));
 });

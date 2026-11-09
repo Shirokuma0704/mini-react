@@ -5,7 +5,9 @@
 //
 // Choices the spec does not make (docs/agent/progress.md "Open"):
 // - every non-void tag needs its closing tag, even <li> and <p> where HTML allows leaving it out
-// - names with a dash are custom elements → never "unknown"; SVG/MathML tag names are in the known list
+// - names with a dash are custom elements → never "unknown"; inside <svg>/<math> any name is accepted (too many to
+//   list, Codex batch-after-limit) and "/>" closes a tag; outside them "/>" closes only void tags, like the parser
+// - an opening tag cut off at the end ("<div" with no ">") counts as unclosed
 // - crossed tags `<b><i></b></i>`: at </b>, <i> is reported unclosed; the later </i> is then stray
 
 const VOID = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr']);
@@ -39,15 +41,19 @@ export function lintHtml(text) {
   const stack = []; // { tag, line }
   TOKEN.lastIndex = 0;
   let m;
+  let lastEnd = 0; // end of the last token read, so the cut-off check below never looks inside one
   while ((m = TOKEN.exec(text)) !== null) {
+    lastEnd = TOKEN.lastIndex;
     if (m[2] === undefined) continue; // comment or <!…>
     const closing = m[1] === '/';
     const tag = m[2].toLowerCase();
     const line = lineAt(text, m.index);
 
     if (!closing) {
-      if (!KNOWN.has(tag) && !tag.includes('-')) warnings.push({ kind: 'unknown', tag, line });
-      const selfClosed = /\/\s*$/.test(m[3]);
+      const foreign = stack.some((s) => s.tag === 'svg' || s.tag === 'math');
+      if (!foreign && !KNOWN.has(tag) && !tag.includes('-')) warnings.push({ kind: 'unknown', tag, line });
+      // "<div/>" does not close a div in HTML (the parser ignores the slash); it does in SVG/MathML.
+      const selfClosed = (foreign || tag === 'svg' || tag === 'math') && /\/\s*$/.test(m[3]);
       if (VOID.has(tag) || selfClosed) continue;
       if (RAW_TEXT.has(tag)) {
         // Skip to the matching closing tag: what is inside is text, not tags.
@@ -59,6 +65,7 @@ export function lintHtml(text) {
           break;
         }
         TOKEN.lastIndex = close.lastIndex;
+        lastEnd = close.lastIndex;
         continue;
       }
       stack.push({ tag, line });
@@ -77,6 +84,10 @@ export function lintHtml(text) {
     }
   }
   for (const open of stack) warnings.push({ kind: 'unclosed', tag: open.tag, line: open.line });
+
+  // An opening tag cut off at the end ("<div" with no ">" after it), which TOKEN cannot match.
+  const cut = /<([a-zA-Z][^\s/>]*)(?:[^>"']|"[^"]*"|'[^']*')*$/.exec(text.slice(lastEnd));
+  if (cut) warnings.push({ kind: 'unclosed', tag: cut[1].toLowerCase(), line: lineAt(text, lastEnd + cut.index) });
 
   return warnings.sort((a, b) => a.line - b.line);
 }

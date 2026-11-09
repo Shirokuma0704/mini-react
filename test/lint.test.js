@@ -76,3 +76,19 @@ test('warningLine: empty when fine; first warning + count of the rest when broke
   assert.equal(warningLine(lintHtml('<b><i>x</b></i>')), '1번째 줄: 닫히지 않은 태그 <i> (외 1개)');
   assert.equal(warningLine(lintHtml('<p>x</p></span>')), '1번째 줄: 짝 없는 닫는 태그 </span>');
 });
+
+// Codex batch-after-limit (c2f15a4): a slash does not close a non-void HTML element, and an unfinished tag is broken.
+test('<div/> is still an open div (the slash only closes void and SVG/MathML elements)', () => {
+  assert.deepEqual(kinds('<div/>'), ['unclosed:div']);
+  assert.deepEqual(lintHtml('<svg><circle r="1"/></svg>'), []);
+});
+
+test('an unfinished opening tag at the end is reported', () => {
+  assert.deepEqual(kinds('<p>x</p><div'), ['unclosed:div']);
+});
+
+test('any tag name inside <svg> or <math> is not "unknown" (SVG/MathML have too many names to list)', () => {
+  assert.deepEqual(lintHtml('<svg><filter><feGaussianBlur /></filter></svg>'), []);
+  assert.deepEqual(lintHtml('<math><mmultiscripts><mi>x</mi></mmultiscripts></math>'), []);
+  assert.deepEqual(kinds('<svg></svg><filter></filter>'), ['unknown:filter']); // outside svg it is unknown again
+});

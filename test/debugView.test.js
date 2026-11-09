@@ -79,3 +79,14 @@ test('renderDebug does not interpret tag text as HTML', () => {
   renderDebug(pre, debugLines(htmlToVdom('<b>x</b>', doc), [], 'old'), doc);
   assert.equal(pre.querySelector('b'), null);
 });
+
+// Codex batch-after-limit (ed361c0): quotes inside a value must not make two different attribute sets look the same.
+test('attribute values are shown unambiguously (JSON form, like text)', () => {
+  const one = htmlToVdom(`<p title='x" id="y'></p>`, doc);
+  const two = htmlToVdom('<p title="x" id="y"></p>', doc);
+  const a = debugLines(one, [], 'old')[0].text;
+  const b = debugLines(two, [], 'old')[0].text;
+  assert.notEqual(a, b);
+  assert.equal(a, '<p title="x\\" id=\\"y">');
+  assert.equal(b, '<p title="x" id="y">');
+});

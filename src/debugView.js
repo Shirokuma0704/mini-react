@@ -29,7 +29,7 @@ function markFor(path, changes, side) {
 
 function attrText(attrs) {
   return Object.entries(attrs)
-    .map(([k, v]) => ` ${k}="${v}"`)
+    .map(([k, v]) => ` ${k}=${JSON.stringify(v)}`) // JSON form: quotes inside a value stay visible (Codex batch-after-limit)
     .join('');
 }
 

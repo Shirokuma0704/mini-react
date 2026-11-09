@@ -182,3 +182,14 @@ test('Enter in the preview (caret lands in a new node while typing) does not syn
   t.fire(t.preview, 'keyup');
   assert.equal(t.source.value, '<p>one</p><p>new</p>');
 });
+
+// §2-4 sample buttons: "글자 칸만 채운다" (Codex batch-after-limit, 6486c27).
+test('fillSourceOnly changes the text box only; the preview follows on the next §2-1 trigger', () => {
+  const t = setup('<p>one</p>');
+  t.sync.fillSourceOnly('<p>sample</p>');
+  assert.equal(t.source.value, '<p>sample</p>');
+  assert.equal(t.preview.innerHTML, '<p>one</p>');
+  assert.equal(t.changes.at(-1), '<p>sample</p>');
+  t.sync.flush();
+  assert.equal(t.preview.innerHTML, '<p>sample</p>');
+});
