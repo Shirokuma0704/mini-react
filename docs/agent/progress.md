@@ -31,7 +31,7 @@ Run started 11-09 ~16:30 in a fork session. Role split (his decision 11-09, orch
 |---|---------|------------|-------|-------|--------|-----|---------|
 | 14 | h() → VDOM, h(Component, props) → component node, expand() before diff, on… → events slot (§4-1, §4-8) | Phase 1 | 223/223 pass (test-run-22.log; h.test.js 30, written by Opus first; impl by Sonnet worker, only src/h.js) | NOT RUN: usage limit until 17:11 (16:25 attempt, gpt-6.1-sol refused). Prompt kept for a batch run later | see git log | | jungle-notes/mini-react/h 함수와 컴포넌트 펼치기.md |
 | 15 | events: relay attached once, handler pointer swapped on re-render (§4-2) | 14 | 240/240 pass (test-run-23.log; events.test.js 17 by Opus first; impl by Sonnet: src/events.js new + 2 lines in src/render.js) | SKIPPED for now by 상철님 ("일단 넘어가줘") | see git log | | jungle-notes/mini-react/이벤트 중계 함수.md |
-| 16 | FunctionComponent + mount()/update() + useState (call order, cursor reset, value or updater, skip same value) + check page (counter) (§4-3, §4-4) | 14, 15 | | | | | |
+| 16 | FunctionComponent + mount()/update() + useState (call order, cursor reset, value or updater, skip same value) + check page (counter) (§4-3, §4-4) | 14, 15 | 269/269 pass (test-run-24.log; component.test.js 19 by Opus first, impl src/component.js by Sonnet; check page hooks.html + src/hooksPage.js + tests by Opus) | SKIPPED for now by 상철님 | see git log | | jungle-notes/mini-react/FunctionComponent와 useState.md |
 | 17 | batching: many set calls → one render in a microtask (§4-4) | 16 | | | | | |
 | 18 | useEffect: after patch, cleanup, deps (§4-5) | 16 | | | | | |
 | 19 | useMemo: computed in place, deps (§4-6) | 16 | | | | | |
@@ -71,6 +71,11 @@ Raw replies: docs/agent/codex/<feature>-r<round>.md (model gpt-6.1-sol, reasonin
 
 ## Open disagreements / unsure spots
 <!-- file:line — what — who raised it (me / Codex) -->
+- src/component.js:68 — set re-renders SYNCHRONOUSLY for now (requestUpdate → update()); "함수로 두 번" therefore renders twice on the check page (render count +2). Feature 17 changes only requestUpdate to a microtask — me
+- src/component.js:78 — a hook slot is { kind: 'state', value }; the setter closes over its slot object, so an old setter still writes the latest slot — Sonnet worker
+- src/component.js:20 — new FunctionComponent(fn, props = {}); update() before mount() throws a TypeError (no guard) — Sonnet worker
+- src/hooksPage.js — check page is mine (Opus): cards = counter, todo list (keys, new array vs push); "그린 횟수" is written by a wrapper outside the component's container. Todo ids come from a plain per-page counter, not state, so "push로 추가" calls no set (browser check 11-09 found duplicate ids from my first version: "할 일 4" ×4) — me
+- server.js:13 — allowlist now also serves hooks.html — me
 - src/events.js:4 — handlers live on one property per element, `el._handlers = { type: fn | null }`; "already has a relay" = `type in el._handlers` (a plain object, so a type named like an Object.prototype key would be mis-detected — no real DOM event has such a name); an emptied pointer stays as null so a returning handler reuses the old relay — Sonnet worker
 - src/events.js:41 — syncEvents pairs VDOM child i with DOM child i and silently skips text nodes / non-element mismatches (no error) — Sonnet worker
 - src/h.js:39 — a prop counts as an event only if it matches /^on[A-Z]/ (onClick); "onclick"/"online" stay attributes. An on[A-Z] prop that is not a function is dropped (neither events nor attrs) — Sonnet worker

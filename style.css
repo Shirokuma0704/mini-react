@@ -97,6 +97,29 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 .panel { border: 1px solid var(--line); padding: 12px 14px; min-width: 0; }
 
+/* hooks.html (Phase 2 check page) */
+.lead { max-width: 72ch; margin: 12px 0 16px; color: var(--muted); font-size: 14px; }
+.top a { color: var(--accent); }
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
+  gap: 16px;
+}
+.try { margin: 0 0 10px; padding-left: 18px; font-size: 13px; color: var(--muted); }
+.try b { color: var(--text); }
+.try code, .lead code { font: 12px var(--mono); }
+.demo {
+  padding: 12px;
+  border: 1px dashed var(--line-strong);
+  background: var(--bg-2);
+}
+.demo-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.demo .big { font: 600 28px/1 var(--mono); min-width: 2.5ch; margin-right: 6px; }
+.demo .muted { color: var(--muted); font-size: 13px; margin-left: auto; }
+.todo-list { margin: 10px 0 0; padding-left: 20px; }
+.renders { margin: 8px 0 0; font-size: 12px; color: var(--muted); }
+.renders output { font: 600 13px var(--mono); color: var(--text); margin-left: 4px; }
+
 .render {
   min-height: 120px;
   padding: 10px 12px;

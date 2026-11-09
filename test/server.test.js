@@ -31,6 +31,13 @@ test('ES module files are served with a JavaScript MIME type', async () => {
   }
 });
 
+test('the Phase 2 hooks check page is served as HTML and loads its own entry module', async () => {
+  const res = await fetch(`${base}/hooks.html`);
+  assert.equal(res.status, 200);
+  assert.match(res.headers.get('content-type'), /^text\/html/);
+  assert.match(await res.text(), /<script type="module" src="\.\/src\/hooksMain\.js"><\/script>/);
+});
+
 test('the stylesheet is served as CSS', async () => {
   const res = await fetch(`${base}/style.css`);
   assert.equal(res.status, 200);

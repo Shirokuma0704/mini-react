@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>mini-react 훅 확인 페이지</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header class="top">
+    <h1>mini-react 훅 확인 페이지</h1>
+    <p class="kicker">Phase 2 · FunctionComponent · useState · <a href="./index.html">Phase 1 검증 페이지로</a></p>
+  </header>
+
+  <p class="lead">카드마다 버튼을 누르기 <b>전에</b> 무엇이 나올지 먼저 적어 보세요. "그린 횟수"는 컴포넌트 함수가 몇 번 실행됐는지예요. 카드 안의 화면은 모두 우리 라이브러리(h → diff → patch)가 그려요.</p>
+
+  <main class="cards">
+    <section class="panel">
+      <h2>카운터 <span class="hint">useState · 명세 4-3, 4-4</span></h2>
+      <ul class="try">
+        <li><b>+1</b>: <code>setCount(count + 1)</code></li>
+        <li><b>함수로 두 번</b>: <code>setCount(c =&gt; c + 1)</code>를 두 번</li>
+        <li><b>값으로 두 번</b>: <code>setCount(count + 1)</code>를 두 번</li>
+        <li><b>같은 값</b>: <code>setCount(count)</code></li>
+      </ul>
+      <div id="counter" class="demo"></div>
+      <p class="renders">그린 횟수 <output id="counter-renders">0</output></p>
+    </section>
+
+    <section class="panel">
+      <h2>할 일 목록 <span class="hint">key · 새 배열 vs 같은 배열 · 명세 3-2, 4-4</span></h2>
+      <ul class="try">
+        <li><b>앞에 추가</b>: <code>setTodos([새것, ...todos])</code> — 새 배열</li>
+        <li><b>push로 추가</b>: <code>todos.push(새것); setTodos(todos)</code> — 같은 배열</li>
+        <li><b>맨 앞 지우기</b>: <code>setTodos(todos.slice(1))</code></li>
+      </ul>
+      <div id="todos" class="demo"></div>
+      <p class="renders">그린 횟수 <output id="todos-renders">0</output></p>
+    </section>
+  </main>
+
+  <script type="module" src="./src/hooksMain.js"></script>
+</body>
+</html>
