@@ -186,6 +186,8 @@ test('"same version" is decided by the diff: commit says same exactly when diff 
     root(li({ key: 'a', class: 'y' }, '밥')),
     root(li({ key: 'a', class: 'x' }, '국')),
     root(li({ key: 'a', class: 'x' }, '밥'), li({}, '국')),
+    root(li({ key: 'a' }, '밥'), li({ key: 'a' }, '밥')), // duplicate keys
+    root(li({ key: 'a' }, '밥'), li({ key: 'a' }, '국')),
     root(),
   ];
   for (const a of cases) {

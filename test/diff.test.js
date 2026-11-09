@@ -157,7 +157,7 @@ test('trailing keyless nodes belong to the last keyed node and go away with it',
   ]);
 });
 
-// §3-3 Q14: duplicate keys → diff still runs; rule chosen by the orchestrator: the first one pairs, the rest do not.
+// §3-3 Q14: duplicate keys → diff still runs; rule chosen by the orchestrator: duplicates pair in order of appearance.
 test('duplicate key in the new list → the first pairs, the second is inserted', () => {
   assert.deepEqual(d('<ul><li key="a">밥</li></ul>', '<ul><li key="a">밥</li><li key="a">국</li></ul>'), [
     { type: 'insert', path: [0, 1], parentOldPath: [0], node: v('<li key="a">국</li>').children[0] },
@@ -186,4 +186,18 @@ test('diff does not change its inputs', () => {
   diff(a, b);
   assert.deepEqual(a, a0);
   assert.deepEqual(b, b0);
+});
+
+// Found 11-09 while switching history to the diff (row 11): with "only the first duplicate pairs", an UNCHANGED list
+// with a duplicate key gave remove + insert, so Patch with nothing changed made a new version (§2-2 broken).
+// Rule now: duplicates pair in order of appearance (1st with 1st, 2nd with 2nd, ...).
+test('duplicate keys, nothing changed → empty list', () => {
+  const html = '<ul><li key="a">밥</li><li key="a">밥</li><li key="a">국</li></ul>';
+  assert.deepEqual(d(html, html), []);
+});
+
+test('duplicate keys pair in order: the 2nd old "a" pairs with the 2nd new "a"', () => {
+  assert.deepEqual(d('<ul><li key="a">밥</li><li key="a">국</li></ul>', '<ul><li key="a">밥</li><li key="a">죽</li></ul>'), [
+    { type: 'update', what: 'text', oldPath: [0, 1, 0], path: [0, 1, 0], text: '죽' },
+  ]);
 });

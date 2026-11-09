@@ -82,14 +82,18 @@ function diffChildren(olds, news, oldPath, path, out) {
     // §3-2 Q7-1: no key anywhere in this list → 양 끝 잘라내기 over the whole list.
     matchRun(olds, 0, olds.length, news, 0, news.length, match);
   } else {
-    // §3-2 Q6: pair groups by key. §3-3 Q14: a duplicate key → the FIRST old one with that key pairs with the
-    // FIRST new one; later duplicates pair with nothing (orchestrator's rule; the spec says "결과 보장 안 함").
-    const oldByKey = new Map();
-    for (const g of groupsOf(olds)) if (g.key !== null && !oldByKey.has(g.key)) oldByKey.set(g.key, g);
+    // §3-2 Q6: pair groups by key. §3-3 Q14: duplicate keys pair in order of appearance — the 1st old "a" with the
+    // 1st new "a", the 2nd with the 2nd (orchestrator's rule; the spec says "결과 보장 안 함"). An unchanged list
+    // with duplicates must still give no change, or Patch would make a version for nothing (§2-2).
+    const oldByKey = new Map(); // key -> old groups with that key, in order, not yet paired
+    for (const g of groupsOf(olds)) {
+      if (g.key === null) continue;
+      if (!oldByKey.has(g.key)) oldByKey.set(g.key, []);
+      oldByKey.get(g.key).push(g);
+    }
     for (const ng of groupsOf(news)) {
-      const og = ng.key === null ? undefined : oldByKey.get(ng.key);
+      const og = ng.key === null ? undefined : oldByKey.get(ng.key)?.shift();
       if (!og) continue;
-      oldByKey.delete(ng.key);
       match[ng.head] = og.head;
       matchRun(olds, og.lead[0], og.lead[1], news, ng.lead[0], ng.lead[1], match);
       matchRun(olds, og.tail[0], og.tail[1], news, ng.tail[0], ng.tail[1], match);
