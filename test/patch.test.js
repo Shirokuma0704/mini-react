@@ -132,9 +132,11 @@ test('a node inserted under <svg> is an SVG element', () => {
 
 // Random check: lists of keyed and unkeyed items, shuffled / edited / grown / shrunk, patched and read back.
 test('random lists: patch(diff(a, b)) always gives b', () => {
+  // MINSTD generator: seed * 48271 stays below 2^53, so every step is exact. (The first version multiplied by
+  // 1103515245, which overflowed the exact range; it made 3 keyed nodes and 0 moves in 400 pairs. Codex bundle r1 F6.)
   let seed = 20261109;
   const rand = (n) => {
-    seed = (seed * 1103515245 + 12345) % 2147483648;
+    seed = (seed * 48271) % 2147483647;
     return seed % n;
   };
   const item = (k) => {
@@ -143,12 +145,41 @@ test('random lists: patch(diff(a, b)) always gives b', () => {
     const ws = rand(3) === 0 ? '\n  ' : '';
     return rand(4) === 0 ? `${ws}<${tag}>${text}</${tag}>` : `${ws}<${tag} key="${k}">${text}</${tag}>`;
   };
-  const list = () => {
+  const items = () => {
     const keys = [...'abcdefg'];
     const out = [];
     const n = rand(6);
     for (let i = 0; i < n; i++) out.push(item(keys.splice(rand(keys.length), 1)[0]));
-    return `<ul>${out.join('')}</ul>`;
+    return out;
   };
-  for (let i = 0; i < 400; i++) check(list(), list());
+  // Half of the new lists are the old items shuffled (so the same keys meet in a new order = moves).
+  const shuffled = (xs) => {
+    const out = [...xs];
+    for (let i = out.length - 1; i > 0; i--) {
+      const j = rand(i + 1);
+      [out[i], out[j]] = [out[j], out[i]];
+    }
+    return out;
+  };
+  const ul = (xs) => `<ul>${xs.join('')}</ul>`;
+  let keyed = 0;
+  let moves = 0;
+  let inserts = 0;
+  let removes = 0;
+  for (let i = 0; i < 400; i++) {
+    const old = items();
+    const a = ul(old);
+    const b = ul(rand(2) === 0 ? shuffled(old) : items());
+    keyed += (a.match(/ key="/g) ?? []).length;
+    for (const c of diff(v(a), v(b))) {
+      if (c.type === 'update' && c.what === 'move') moves += 1;
+      if (c.type === 'insert') inserts += 1;
+      if (c.type === 'remove') removes += 1;
+    }
+    check(a, b);
+  }
+  // The random lists must really exercise what this test claims: keyed items, moves, inserts and removes.
+  assert.ok(keyed > 400, `keyed nodes: ${keyed}`);
+  assert.ok(moves > 50, `moves: ${moves}`);
+  assert.ok(inserts > 50 && removes > 50, `inserts ${inserts}, removes ${removes}`);
 });

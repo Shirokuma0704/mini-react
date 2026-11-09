@@ -128,3 +128,16 @@ test('attribute values are shown unambiguously (JSON form, like text)', () => {
   assert.equal(a, '<p title="x\\" id=\\"y">');
   assert.equal(b, '<p title="x" id="y">');
 });
+
+// Codex bundle r1 F4 (11-09): diff gives "move" AND "replace" for the same key. §3-4: 교체 = old red + new green, so
+// the replace must win over the move's yellow at the same place, whatever order the list has.
+test('move + replace on the same key: replace wins (old red, new green), in either list order', () => {
+  const a = htmlToVdom('<ul><li key="a">A</li><li key="b">B</li></ul>', doc);
+  const b = htmlToVdom('<ul><p key="b">B</p><li key="a">A</li></ul>', doc);
+  const changes = diff(a, b);
+  assert.deepEqual(changes.map((c) => c.what ?? c.type), ['move', 'replace']);
+  for (const list of [changes, [...changes].reverse()]) {
+    assert.deepEqual(marks(a, list, 'old'), ['del <li key="b">', 'del "B"', 'del </li>']);
+    assert.deepEqual(marks(b, list, 'new'), ['add <p key="b">', 'add "B"', 'add </p>']);
+  }
+});

@@ -11,7 +11,8 @@
 // Colors, spec §3-4: 추가 = add (new side), 지워짐 = del (old side), 교체 = del old + add new, 고침 = chg both sides
 // (자리 고침 included). An unknown type is painted chg on both sides, so it still shows.
 // Reach: insert / remove / replace / move cover the node and everything under it; a text or attribute change covers
-// only that node's own lines. When several changes cover a line, the most specific (longest path) wins.
+// only that node's own lines. When several changes cover a line, the most specific (longest path) wins;
+// at the same length insert / remove / replace win over an update (a move never hides a replace on the same key).
 const SIDES = {
   insert: { new: 'add' },
   remove: { old: 'del' },
@@ -31,6 +32,7 @@ function placeOn(change, side) {
 function markFor(path, changes, side) {
   let mark = null;
   let best = -1;
+  let bestStrong = false;
   for (const change of changes) {
     const at = placeOn(change, side);
     if (!at) continue;
@@ -39,8 +41,11 @@ function markFor(path, changes, side) {
     if (!color) continue;
     const onlyItself = change.type === 'update' && change.what !== 'move';
     const hit = onlyItself ? at.length === path.length && startsWith(path, at) : startsWith(path, at);
-    if (hit && at.length > best) {
+    // At equal length a replace/insert/remove beats an update (a move's yellow must not hide a replace): order-independent.
+    const strong = Boolean(known);
+    if (hit && (at.length > best || (at.length === best && strong && !bestStrong))) {
       best = at.length;
+      bestStrong = strong;
       mark = color;
     }
   }
