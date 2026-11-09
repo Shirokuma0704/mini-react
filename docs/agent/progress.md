@@ -18,7 +18,7 @@ this run by his choice; rows 2-9 are all "ahead" until he checks them.
 | 7 | samples 1/2 (scope 7, spec §2-4) | 3, 4 | 111/111 pass (test-run-10.log) | batch r1: buttons also redrew the preview, against §2-4 "글자 칸만 채운다", and the test encoded it → fixed (fillSourceOnly) + test corrected; → then REVERSED by 상철님 ("미리보기도 같이", spec §2-4 updated): buttons fill text box + preview; Codex: SKIPPED by 상철님 11-09 13:0x ("검증 생략") after the usage limit hit again; 148/148 tests + real-browser check only | see git log | | jungle-notes/mini-react/샘플.md |
 | 8 | PROVISIONAL diff/patch + wire Patch / back / forward + jsdom flow test (scope 8) | 2, 6 | 123/123 pass (test-run-11.log; flow = test/flow.test.js) | batch r1: OK | see git log | | jungle-notes/mini-react/Patch 흐름 (임시 diff·patch).md |
 | 9 | debug panel colored from the diff result (scope 6, spec §2-3) | 8 | 136/136 pass (test-run-12.log) | batch r1: quotes in attr values made 2 different attr sets look the same → JSON form, tested; r2 (fix-batch-r2.md): sample + debug fixes confirmed; lint still missed cut-off quoted values, foreignObject = HTML, SVG typos, raw-text cut-off; CSS test lacked min-width → all fixed + tested (8ed1189 follow-up); r3 (fix-batch-r3.md): OK | see git log | | jungle-notes/mini-react/디버그 칸.md |
-| 10 | REAL diff + patch (spec §3) + debug panel learns the 4 kinds + 실제 영역 drops keys | 8, 9 | 181/181 pass (test-run-17.log; diff 23, patch 10 incl. 400 random list pairs, debugView 14) | NOT RUN: usage limit (상철님 11-09 ~14:30 "codex한도를 다써서 검증이 안되긴해"); pending | see git log | | jungle-notes/mini-react/diff와 patch.md |
+| 10 | REAL diff + patch (spec §3) + debug panel learns the 4 kinds + 실제 영역 drops keys | 8, 9 | 181/181 pass (test-run-17.log; diff 23, patch 10 incl. 400 random list pairs, debugView 14) | NOT RUN: usage limit (상철님 11-09, before 14:26: "codex한도를 다써서 검증이 안되긴해"); pending | see git log | | jungle-notes/mini-react/diff와 patch.md |
 
 Next features (spec §3, after 10; one commit each): 11 history "same" = diff returned [] (§3-4) · 12 duplicate-key warning line (§3-3 Q14) · 13 samples with keys (§2-5).
 
@@ -29,7 +29,7 @@ Order note: debug panel (scope 6) comes after diff/patch (scope 8) because it co
 Ahead of his verification: 9 (rows 2-10) → over 3: wait for him after every feature.
 Latest full run: test-run-17.log, 181/181 pass.
 
-## Real-browser check of row 10 (11-09 ~14:40, Claude app built-in browser, npm start on port 5174)
+## Real-browser check of row 10 (11-09, before 14:26, Claude app built-in browser, npm start on port 5174)
 Driven by script in the page (not typed): (1) sample 1, unkeyed, new li put before the first + text edit → Patch → old li elements reused (same objects), colors follow index pairing (expected for unkeyed lists, §3-2); (2) indented keyed [a,b,c] → [c,x,a,b] → 실제 영역 has no key attributes, preview keeps them, li elements a/b/c reused, c's group moved, x's group added, trailing "
 " left c's group and joined b's (§3-2 Q8). Not checked: typing by hand, light mode, other browsers.
 
