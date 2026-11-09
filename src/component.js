@@ -12,6 +12,11 @@
 //            slots from earlier renders, otherwise it throws before anything is patched (the screen keeps the last good
 //            render). Same number but a different kind at some slot (state/effect/memo) = one console.warn per render,
 //            and the render goes on with a fresh slot of the new kind in that place.
+//            A rejected render (count error, a child calling a hook, or the function itself throwing) leaves no trace on
+//            the hooks: the slots it replaced come back, effects it booked never run, and a failed first render puts
+//            hookCount back to null. State values already set by setters stay (those are real updates).
+//            Choice the spec does not make: an effect slot thrown away by a kind swap keeps its cleanup; it is called after
+//            patch, right before that render's effects run (and not at all if that render is rejected).
 // Spec §4-7: hooks only work in the root component. While child components are being expanded, any hook call throws
 //            an error that says "root". The flag is cleared in a finally, so a later component can use hooks normally.
 // Spec §4-4: the setter takes a value or a function (called with the latest value); the same value (Object.is,
@@ -40,6 +45,7 @@ export class FunctionComponent {
     this.cursor = 0; // which slot the next useState call uses
     this.hookCount = null; // how many hooks the last good render called (null = never rendered)
     this.warned = false; // true once this render has already warned about hook order
+    this.dropped = []; // effect slots this render threw away by a kind swap; their cleanups run after patch
     this.container = null;
     this.root = null; // the last drawn root VDOM
     this.updateQueued = false; // true while a batched update() is booked but has not run yet
@@ -49,6 +55,10 @@ export class FunctionComponent {
   buildRoot() {
     this.cursor = 0;
     this.warned = false;
+    this.dropped = [];
+    // Snapshot for a rejected render: the slot objects (setters close over them) and the count of the last good render.
+    const committedHooks = this.hooks.slice();
+    const committedCount = this.hookCount;
     const previous = currentComponent;
     const previousExpanding = expandingChildren;
     currentComponent = this;
@@ -59,6 +69,12 @@ export class FunctionComponent {
       this.checkHookCount();
       expandingChildren = true; // from here on, only child components run
       result = expand(vnode);
+    } catch (error) {
+      this.hooks = committedHooks;
+      this.hookCount = committedCount;
+      for (const slot of this.hooks) if (slot.kind === 'effect') slot.pending = null; // forget effects it booked
+      this.dropped = [];
+      throw error;
     } finally {
       currentComponent = previous;
       expandingChildren = previousExpanding;
@@ -66,7 +82,7 @@ export class FunctionComponent {
     return { kind: 'element', tag: 'div', attrs: {}, children: result === null ? [] : [result] };
   }
 
-  // Compare this render's hook count with the last good one; on a difference, undo this render's slots and throw.
+  // Compare this render's hook count with the last good one; on a difference throw (buildRoot then undoes the render).
   checkHookCount() {
     if (this.hookCount === null) {
       this.hookCount = this.cursor; // first render: nothing to compare
@@ -74,8 +90,6 @@ export class FunctionComponent {
     }
     if (this.cursor === this.hookCount) return;
     const message = `hook count changed: last render called ${this.hookCount} hooks, this render called ${this.cursor}`;
-    this.hooks.length = Math.min(this.hooks.length, this.hookCount); // drop slots this failed render added
-    for (const slot of this.hooks) if (slot.kind === 'effect') slot.pending = null; // forget effects it booked
     throw new Error(message);
   }
 
@@ -100,8 +114,17 @@ export class FunctionComponent {
     this.runEffects();
   }
 
-  // After drawing: go through the slots in order; for each effect marked pending, call the old cleanup, then run fn.
+  // After drawing: first the cleanups of effect slots this render threw away, then go through the slots in order; for
+  // each effect marked pending, call the old cleanup, then run fn.
   runEffects() {
+    const dropped = this.dropped;
+    this.dropped = [];
+    for (const slot of dropped) {
+      if (!slot.cleanup) continue;
+      const cleanup = slot.cleanup;
+      slot.cleanup = null;
+      cleanup();
+    }
     for (const slot of this.hooks) {
       if (slot.kind !== 'effect' || !slot.pending) continue;
       const { fn, deps } = slot.pending;
@@ -186,7 +209,11 @@ function takeSlot(component, kind, make) {
     }
     first = true;
   }
-  if (first) component.hooks[index] = make();
+  if (first) {
+    const old = component.hooks[index];
+    if (old && old.kind === 'effect' && old.cleanup) component.dropped.push(old);
+    component.hooks[index] = make();
+  }
   return { slot: component.hooks[index], first };
 }
 
