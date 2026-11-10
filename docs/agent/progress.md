@@ -46,13 +46,13 @@ Not a spec'd orchestrate run: one chat request, built by Opus directly (design w
 | # | Feature | Depends on | Tests | Codex | Commit | Him | Why doc |
 |---|---------|------------|-------|-------|--------|-----|---------|
 | 23 | action log: one line per action (load / sample / Patch ×3 outcomes / back / forward / tree click), newest on top; counts of the four change kinds taken from the diff result + "건드린 노드 N개" from a MutationObserver on 실제 영역 (src/touched.js) (§2-6) | 8, 10 | test/actionLog.test.js 11 tests written first; 385/385 at the commit | 없음: not run (not asked; offer it to him) | 3a97cd4 | | jungle-notes/mini-react/액션 로그와 모션.md |
-| 24 | page look + motion: no card around every section, action log in a sticky right rail (≥1180px), design.md tokens with light/dark; src/motion.js: FLIP slide of shifted nodes, boxes on the nodes patch touched (from touched.js, not from the diff), removed-node ghost, tree ring travelling to the new "지금", new tree node / log line / status wipe-in; debug lines painted in by CSS | 23 | test/motion.test.js 4 tests (guards only: 실제 영역 stays attribute-free, reduced motion = nothing); 389/389 (test-run-33.log) | 없음: not run (not asked; offer it to him) | see git log | | same doc |
+| 24 | page look + motion: no card around every section, action log under 실제 영역 (first built as a right rail ≥1180px; moved 11-10 14:1x because at the pane's default 1024px width the log fell to y=1368, off screen), design.md tokens with light/dark; src/motion.js: FLIP slide of shifted nodes, boxes on the nodes patch touched (from touched.js, not from the diff), removed-node ghost, tree ring travelling to the new "지금", new tree node / log line / status wipe-in; debug lines painted in by CSS | 23 | test/motion.test.js 4 tests (guards only: 실제 영역 stays attribute-free, reduced motion = nothing); 389/389 (test-run-33.log, again after the layout move: test-run-34.log) | 없음: not run (not asked; offer it to him) | see git log | | same doc |
 
 Real-browser check of rows 23-24 (11-10 13:58, Claude app built-in browser on port 5175, 1400×900, script-driven clicks): dark + light screenshots taken mid-motion and after; a Patch with text change + attr + insert + remove + move showed 5 boxes (지워짐/추가/자리/속성/글자), 48 animations started, 0 left running and 0 boxes left after 3 s, 실제 영역 innerHTML had no style/class added, no console errors; back → log line + tree "지금" on v1; hooks.html still lays out (light). NOT checked: the timed playback watched by eye frame by frame (only two still frames), widths below 1180px, typing by hand, reduced-motion in a real browser (jsdom test only), Firefox/Safari.
 
 18 and 19 are independent of each other; everything else is a chain.
 
-Ahead of his verification (Phase 2): 0. Rows 14-16 ✔ 16:47, 17-18 ✔ 17:06, 19-20 ✔ 17:17, 21 ✔ 20:07, 22 ✔ 20:09 (by test run, no page card).
+Ahead of his verification: 2 (rows 23-24, 11-10). Phase 2: 0. Rows 14-16 ✔ 16:47, 17-18 ✔ 17:06, 19-20 ✔ 17:17, 21 ✔ 20:07, 22 ✔ 20:09 (by test run, no page card).
 
 11-09 ~16:30 상철님 after row 14: "Codex검증은 일단 넘어가줘" — continue without Codex for now (limit until 17:11). So the 15-min timer condition "Codex OK" is waived by him for this run; tests pass + fewer than 3 ahead still apply.
 
@@ -63,7 +63,7 @@ Run of 11-09 after the diff grill: normal orchestrate stops again (the "끝까�
 Order note: debug panel (scope 6) comes after diff/patch (scope 8) because it colors from the diff result.
 
 Ahead of his verification: 0 (rows 2-13 ✔ 11-09 14:50).
-Latest full run: test-run-33.log, 389/389 pass (11-10).
+Latest full run: test-run-34.log, 389/389 pass (11-10).
 
 ## Real-browser check of row 10 (11-09, before 14:26, Claude app built-in browser, npm start on port 5174)
 Driven by script in the page (not typed): (1) sample 1, unkeyed, new li put before the first + text edit → Patch → old li elements reused (same objects), colors follow index pairing (expected for unkeyed lists, §3-2); (2) indented keyed [a,b,c] → [c,x,a,b] → 실제 영역 has no key attributes, preview keeps them, li elements a/b/c reused, c's group moved, x's group added, trailing "
@@ -86,7 +86,7 @@ Raw replies: docs/agent/codex/<feature>-r<round>.md (model gpt-6.1-sol, reasonin
 
 ## Open disagreements / unsure spots
 <!-- file:line — what — who raised it (me / Codex) -->
-- src/touched.js — "건드린 노드" = different nodes in the observer's records: added, removed, moved (removed + added in one pass), attribute targets, text targets. Nodes inside a newly inserted subtree are not counted one by one (only its top node). The same content going forward and back can give different counts (seen: 10 vs 9) because insert/remove are not symmetric in whitespace grouping — me (row 23)
+- src/touched.js — "건드린 노드" = different nodes in the observer's records: added, removed, moved (removed + added in one pass), attribute targets, text targets. Nodes inside a newly inserted subtree are not counted one by one (only its top node). The same content going forward and back can give different counts (seen: 10 vs 9, both with 10 changes): going back, one li is both moved and loses its class, and a node is counted once (read from the observer records in the page 11-10) — me (row 23)
 - src/actionLog.js — sync events (text box ↔ preview, §2-1) are NOT logged; "no more back/forward" cannot happen through the buttons (disabled), so it has no line — me (row 23)
 - src/motion.js — boxes for a text node use a Range rect; blank text nodes get no box although they count in "건드린 노드". A box is drawn at the node's final place and does not follow later layout changes (it lives 1.9 s). Rapid clicks: clearFx() drops the earlier boxes — me (row 24)
 - src/motion.js — FLIP uses translate only (size changes are not animated) and inline elements ignore transform, so an inline node that moved inside a line jumps — me (row 24)
