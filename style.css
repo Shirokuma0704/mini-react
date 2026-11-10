@@ -136,7 +136,9 @@ h2 + .sub { margin-top: 0; }
   color: var(--text);
   background: var(--info-bg);
   border: 1px solid var(--info-line);
+  overflow: hidden;
 }
+.status-text { display: inline-block; }
 
 button {
   height: 36px;
@@ -194,12 +196,18 @@ button:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px
   color: var(--bg);
   background: var(--chg-text);
 }
+/* near the top of the stage the tag sits inside the box, top right */
+.fx-box.in .fx-tag { top: 0; right: 0; bottom: auto; left: auto; }
 .fx-box.add .fx-fill { border-color: var(--add-text); box-shadow: 0 0 0 3px var(--add-bg); }
 .fx-box.add .fx-tag { background: var(--add-text); }
 .fx-box.move .fx-fill { border-color: var(--ring); box-shadow: 0 0 0 3px var(--halo); }
 .fx-box.move .fx-tag { background: var(--ring); color: var(--on-ring); }
 .fx-box.del .fx-fill { border-color: var(--del-text); border-style: dashed; background: var(--del-bg); box-shadow: none; }
 .fx-box.del .fx-tag { background: var(--del-text); }
+/* The removed node's copy: same place, same size, struck through in the "지워짐" color. */
+.fx-ghost { position: absolute; inset: 0; color: var(--del-text); text-decoration: line-through; }
+.fx-ghost > * { width: 100%; box-sizing: border-box; }
+.fx-ghost a { color: inherit; }
 
 .legend { margin: 8px 0 0; font-size: 12.5px; line-height: 22px; color: var(--faint); }
 .key { display: inline-block; margin-left: 6px; padding: 0 6px; font: 12.5px/18px var(--mono); border: 1px solid; }
@@ -267,7 +275,6 @@ textarea:focus { outline: none; border-color: var(--ring); box-shadow: 0 0 0 3px
   pointer-events: none;
   outline: 2px solid var(--ring);
   outline-offset: 2px;
-  box-shadow: 0 0 0 7px var(--halo);
 }
 
 .movelog { margin: 0; font: 13px/1.8 var(--mono); color: var(--muted); word-break: break-all; }
@@ -346,10 +353,27 @@ textarea:focus { outline: none; border-color: var(--ring); box-shadow: 0 0 0 3px
 .demo .nums { margin: 10px 0 4px; font: 15px var(--mono); }
 .renders output.said { display: block; margin: 4px 0 0; font: 12.5px/1.5 var(--mono); white-space: pre-wrap; word-break: break-word; }
 .renders { margin: 8px 0 0; font-size: 12.5px; color: var(--faint); }
-.renders output { font: 600 13px var(--mono); color: var(--text); margin-left: 4px; }
+.renders output { display: inline-block; font: 600 13px var(--mono); color: var(--text); margin-left: 4px; }
+
+/* The log rides beside the cards and stays in view while he scrolls through them. */
+.split { display: grid; grid-template-columns: minmax(0, 1fr) 300px; column-gap: 32px; align-items: start; }
+.rail {
+  position: sticky;
+  top: 16px;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 32px);
+  padding-left: 24px;
+  border-left: 1px solid var(--line);
+}
+.rail .legend { margin: 0 0 12px; }
+.rail .actionlog { max-height: none; min-height: 0; }
 
 /* ---------- narrow screens ---------- */
 @media (max-width: 900px) {
+  .split { grid-template-columns: minmax(0, 1fr); }
+  .rail { position: static; order: -1; max-height: none; margin-bottom: 32px; padding: 0 0 16px; border-left: 0; border-bottom: 1px solid var(--line); }
+  .rail .actionlog { max-height: 200px; }
   body { padding: 16px 16px 48px; }
   .controls { margin: 12px -16px 0; padding: 10px 16px; }
   .status { margin-left: 0; flex: 1 0 100%; }

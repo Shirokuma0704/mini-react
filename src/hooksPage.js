@@ -6,6 +6,8 @@
 // (spec §4-4 "같은 값이면 다시 그리지 않고 건너뛴다").
 import { h } from './h.js';
 import { FunctionComponent, useState, useEffect, useMemo } from './component.js';
+import { watchLiveMotion, lineEntered } from './liveMotion.js';
+import { watchHooksLog } from './hooksLog.js';
 
 // Wrap a component so every run bumps a number shown in `out`.
 function countRenders(Component, out) {
@@ -282,7 +284,7 @@ function Form() {
 
 // Options are for tests: a short tick, and a timer that starts paused (there is no unmount, so a running interval
 // would keep the test process alive).
-export function mountHooksPage(doc, { tickMs = 1000, timerStartsRunning = true } = {}) {
+export function mountHooksPage(doc, { tickMs = 1000, timerStartsRunning = true, now } = {}) {
   const byId = (id) => doc.getElementById(id);
   new FunctionComponent(countRenders(Counter, byId('counter-renders'))).mount(byId('counter'));
   new FunctionComponent(countRenders(makeTodos(), byId('todos-renders'))).mount(byId('todos'));
@@ -308,4 +310,7 @@ export function mountHooksPage(doc, { tickMs = 1000, timerStartsRunning = true }
 
   mountRulesCard(doc);
   new FunctionComponent(countRenders(Form, byId('form-renders'))).mount(byId('form'));
+  // The log starts after the first drawing: it records what happens from here on (src/hooksLog.js).
+  watchHooksLog(doc, { now, onLine: (li, isNew) => lineEntered(doc, li, isNew) });
+  watchLiveMotion(doc);
 }

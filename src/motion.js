@@ -11,17 +11,81 @@
 //
 // In jsdom (tests) element.animate does not exist, so every function below does nothing.
 
-const EASE = 'cubic-bezier(0.4, 0.14, 0.3, 1)'; // travel
-const ARRIVE = 'cubic-bezier(0, 0, 0.38, 0.9)';
-const TRAVEL = 520; // nodes slide from where they were to where they are now
-const WIPE = 420;
+export const EASE = 'cubic-bezier(0.4, 0.14, 0.3, 1)'; // travel
+export const ARRIVE = 'cubic-bezier(0, 0, 0.38, 0.9)';
+export const TRAVEL = 520; // nodes slide from where they were to where they are now
+export const WIPE = 420;
 const HOLD = 1900; // how long a box stays so its label can be read
+const GONE = 600; // beat 0: a removed node's ghost is held 250 ms, then wiped away over the other 350 ms
 
 const LABELS = { add: '추가', move: '자리', attrs: '속성', text: '글자', del: '지워짐' };
 
-export function createMotion(doc, { actual, fx, tree, treeRing, status }) {
+// Can this document animate at all? (jsdom has no element.animate, so everything stays a no-op there.)
+export function canAnimate(doc, probe) {
   const win = doc.defaultView;
-  const can = Boolean(win && fx && typeof actual.animate === 'function' && typeof win.matchMedia === 'function');
+  return Boolean(win && probe && typeof probe.animate === 'function' && typeof win.matchMedia === 'function');
+}
+
+// FLIP pass: every element of `container` that is now drawn somewhere else than in `oldRects` slides there from its
+// old place. Inline boxes ignore transform, so they are skipped; a child only gets the part of the shift that its
+// nearest transformable ancestor does not already carry. Returns whether anything travelled.
+export function flip(container, oldRects, { delay = 0 } = {}) {
+  const win = container.ownerDocument.defaultView;
+  const isInline = new Map();
+  const inline = (el) => {
+    if (!isInline.has(el)) isInline.set(el, win?.getComputedStyle?.(el)?.display === 'inline');
+    return isInline.get(el);
+  };
+  const shift = new Map(); // transformable elements only
+  for (const [node, old] of oldRects) {
+    if (node.nodeType !== 1 || node === container || !container.contains(node) || inline(node)) continue;
+    const rect = node.getBoundingClientRect();
+    shift.set(node, { x: old.left - rect.left, y: old.top - rect.top });
+  }
+  let travelled = false;
+  for (const [el, own] of shift) {
+    let up = { x: 0, y: 0 };
+    for (let p = el.parentNode; p && p !== container; p = p.parentNode) {
+      if (p.nodeType !== 1 || inline(p)) continue;
+      up = shift.get(p) ?? up; // nearest transformable ancestor only; a new one (no old rect) carries nothing
+      break;
+    }
+    const x = own.x - up.x;
+    const y = own.y - up.y;
+    if (Math.abs(x) < 0.5 && Math.abs(y) < 0.5) continue;
+    el.animate([{ transform: `translate(${x}px, ${y}px)` }, { transform: 'translate(0, 0)' }], {
+      duration: TRAVEL,
+      delay,
+      easing: EASE,
+      fill: 'backwards',
+    });
+    travelled = true;
+  }
+  return travelled;
+}
+
+// A new line on top of a log list: it and every line under it come down as one block; the new line is clipped so
+// nothing of it is drawn above the list's top edge.
+export function slideInLine(li) {
+  const height = li.getBoundingClientRect().height;
+  li.animate(
+    [
+      { transform: `translateY(${-height}px)`, clipPath: 'inset(100% 0 0 0)' },
+      { transform: 'translateY(0)', clipPath: 'inset(0 0 0 0)' },
+    ],
+    { duration: 320, easing: EASE },
+  );
+  for (let el = li.nextElementSibling; el; el = el.nextElementSibling) {
+    el.animate([{ transform: `translateY(${-height}px)` }, { transform: 'translateY(0)' }], {
+      duration: 320,
+      easing: EASE,
+    });
+  }
+}
+
+export function createMotion(doc, { actual, fx, tree, treeRing, statusText }) {
+  const win = doc.defaultView;
+  const can = Boolean(fx) && canAnimate(doc, actual);
   const off = () => !can || win.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // Where a node is drawn. Text nodes have no box of their own, a Range gives one. Blank text draws nothing.
@@ -53,10 +117,17 @@ export function createMotion(doc, { actual, fx, tree, treeRing, status }) {
     while (fx.firstChild) fx.removeChild(fx.firstChild);
   }
 
-  // A colored frame with a word on it, laid over 실제 영역 at `rect`.
-  function box(kind, words, rect, base, delay) {
+  const overlaps = (a, b) => a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+
+  // A colored frame with a word on it, laid over 실제 영역 at `rect`. `placed` holds the tag rects already drawn in
+  // this pass: a tag that lands on one of them is pushed sideways. Returns the box and how far the tag and the halo
+  // reach left/right of it (so a clip-path wipe does not crop them).
+  function box(kind, words, rect, base, placed) {
     const el = doc.createElement('div');
-    el.className = `fx-box ${kind}`;
+    // Near the top of the stage a tag above the box would stick out over the panel heading: put it inside instead.
+    // A removed node's tag also goes inside (right end): above, it would cover the line before the removed one.
+    const inside = kind === 'del' || rect.top - base.top < 24;
+    el.className = `fx-box ${kind}${inside ? ' in' : ''}`;
     el.style.left = `${rect.left - base.left}px`;
     el.style.top = `${rect.top - base.top}px`;
     el.style.width = `${rect.width}px`;
@@ -68,18 +139,56 @@ export function createMotion(doc, { actual, fx, tree, treeRing, status }) {
     tag.textContent = words;
     el.append(fill, tag);
     fx.appendChild(el);
-    // The frame itself comes from nowhere, so this one may fade (design §8: fade only what appears from nowhere).
-    const life = el.animate(
-      [
-        { opacity: 0, offset: 0 },
-        { opacity: 1, offset: 0.1 },
-        { opacity: 1, offset: 0.8 },
-        { opacity: 0, offset: 1 },
-      ],
-      { duration: HOLD, delay, fill: 'both', easing: 'linear' },
-    );
-    life.onfinish = () => el.remove();
-    return fill;
+    let tagRect = tag.getBoundingClientRect();
+    let offset = 0;
+    for (let tries = 0; tries < 6; tries += 1) {
+      const hit = placed.find((p) => overlaps(tagRect, p));
+      if (!hit) break;
+      offset += hit.width + 4;
+      if (inside) tag.style.marginRight = `${offset}px`;
+      else tag.style.marginLeft = `${offset}px`;
+      tagRect = tag.getBoundingClientRect();
+    }
+    placed.push(tagRect);
+    const boxRect = el.getBoundingClientRect();
+    return {
+      el,
+      padL: Math.max(8, boxRect.left - tagRect.left),
+      padR: Math.max(8, tagRect.right - boxRect.right),
+    };
+  }
+
+  // A copy of a removed node for the overlay: it shows WHAT went away. The copy lives in #actual-fx, never in
+  // 실제 영역. ids are dropped so the page never holds the same id twice while the copy is up.
+  function ghostOf(node) {
+    const ghost = doc.createElement('div');
+    ghost.className = 'fx-ghost';
+    const copy = node.cloneNode(true);
+    if (copy.nodeType === 1) {
+      copy.removeAttribute('id');
+      for (const el of copy.querySelectorAll('[id]')) el.removeAttribute('id');
+      copy.style.margin = '0';
+    }
+    ghost.appendChild(copy);
+    return ghost;
+  }
+
+  // How long a frame lives. A frame that is not wiped in comes from nowhere, so it may fade in (design §8).
+  function life(el, delay, fadeIn) {
+    const frames = fadeIn
+      ? [
+          { opacity: 0, offset: 0 },
+          { opacity: 1, offset: 0.1 },
+          { opacity: 1, offset: 0.8 },
+          { opacity: 0, offset: 1 },
+        ]
+      : [
+          { opacity: 1, offset: 0 },
+          { opacity: 1, offset: 0.8 },
+          { opacity: 0, offset: 1 },
+        ];
+    const anim = el.animate(frames, { duration: HOLD, delay, fill: 'both', easing: 'linear' });
+    anim.onfinish = () => el.remove();
   }
 
   // Call right AFTER patch with what src/touched.js saw.
@@ -87,43 +196,36 @@ export function createMotion(doc, { actual, fx, tree, treeRing, status }) {
     if (!snap || off()) return;
     clearFx();
     const base = fx.getBoundingClientRect();
+    const placed = [];
 
-    // Beat 1 (travel): every node that is now drawn somewhere else slides there from its old place.
-    // A child only gets the part of the shift its parent does not already carry.
-    const shift = new Map();
-    for (const [node, old] of snap.rects) {
-      if (node.nodeType !== 1 || !actual.contains(node)) continue;
-      const rect = node.getBoundingClientRect();
-      shift.set(node, { x: old.left - rect.left, y: old.top - rect.top });
-    }
-    let travelled = false;
-    for (const [el, own] of shift) {
-      const up = shift.get(el.parentNode) ?? { x: 0, y: 0 };
-      const x = own.x - up.x;
-      const y = own.y - up.y;
-      if (Math.abs(x) < 0.5 && Math.abs(y) < 0.5) continue;
-      el.animate([{ transform: `translate(${x}px, ${y}px)` }, { transform: 'translate(0, 0)' }], {
-        duration: TRAVEL,
-        easing: EASE,
-      });
-      travelled = true;
-    }
-    const wait = travelled ? TRAVEL : 0;
-
-    // Removed nodes: a red frame where the node WAS, wiped away while the others travel.
+    // Beat 0 (remove): the removed node itself stays visible where it WAS, as a struck-through red copy inside the
+    // red frame (his feedback 11-10: an empty red box "따로 놀아 보임" — the content had already vanished under it).
+    // Copy, frame and tag are held, then wiped away as one. The other nodes keep their old places meanwhile.
+    let gone = 0;
     for (const node of touched.removed) {
       const rect = snap.rects.get(node);
       if (!rect) continue;
-      const fill = box('del', LABELS.del, rect, base, 0);
-      fill.animate([{ clipPath: 'inset(0 0 0 0)' }, { clipPath: 'inset(0 0 0 100%)' }], {
-        duration: WIPE + 200,
-        delay: 500,
-        easing: EASE,
-        fill: 'forwards',
-      });
+      gone = GONE;
+      const { el, padL, padR } = box('del', LABELS.del, rect, base, placed);
+      el.insertBefore(ghostOf(node), el.lastChild); // under the tag, over the fill
+      const whole = `inset(-30px ${-padR}px -8px ${-padL}px)`;
+      const wiped = `inset(-30px ${-padR}px -8px 100%)`;
+      const wipe = el.animate(
+        [
+          { clipPath: whole, offset: 0 },
+          { clipPath: whole, offset: 0.42, easing: EASE },
+          { clipPath: wiped, offset: 1 },
+        ],
+        { duration: GONE, easing: 'linear', fill: 'forwards' },
+      );
+      wipe.onfinish = () => el.remove();
     }
 
+    // Beat 1 (travel): every node that is now drawn somewhere else slides there from its old place.
+    const travelled = flip(actual, snap.rects, { delay: gone });
+
     // Beat 2 (arrive): a frame on every node patch touched, after the travel has ended.
+    const wait = gone + (travelled ? TRAVEL : 0);
     const marks = new Map(); // node -> { kind, words[] }
     const mark = (node, kind, word) => {
       const m = marks.get(node) ?? { kind, words: [] };
@@ -137,15 +239,18 @@ export function createMotion(doc, { actual, fx, tree, treeRing, status }) {
     for (const [node, m] of marks) {
       const rect = rectOf(node);
       if (!rect || (rect.width === 0 && rect.height === 0)) continue;
-      box(m.kind, m.words.join(' · '), rect, base, wait);
-      // A new element is drawn in with a wipe from the left; until its turn it stays hidden.
+      const { el, padL, padR } = box(m.kind, m.words.join(' · '), rect, base, placed);
+      // A new element is drawn in with a wipe from the left; its frame is wiped in step with it.
       if (m.kind === 'add' && node.nodeType === 1) {
-        node.animate([{ clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0 0 0)' }], {
-          duration: WIPE,
-          delay: wait,
-          easing: ARRIVE,
-          fill: 'backwards',
-        });
+        const opts = { duration: WIPE, delay: wait, easing: ARRIVE, fill: 'backwards' };
+        node.animate([{ clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0 0 0)' }], opts);
+        el.animate(
+          [{ clipPath: `inset(-30px 100% -8px ${-padL}px)` }, { clipPath: `inset(-30px ${-padR}px -8px ${-padL}px)` }],
+          opts,
+        );
+        life(el, wait, false);
+      } else {
+        life(el, wait, true);
       }
     }
   }
@@ -166,10 +271,11 @@ export function createMotion(doc, { actual, fx, tree, treeRing, status }) {
     for (const id of freshIds) {
       const btn = tree.querySelector(`button[data-id="${id}"]`);
       if (!btn) continue;
+      // Insets reach past the li so its connector line (left of it) and the button's ring are not cropped.
       btn.parentNode.animate(
         [
-          { clipPath: 'inset(0 100% 0 0)', transform: 'translateX(-8px)' },
-          { clipPath: 'inset(0 0 0 0)', transform: 'translateX(0)' },
+          { clipPath: 'inset(-6px 100% -6px -24px)', transform: 'translateX(-8px)' },
+          { clipPath: 'inset(-6px -6px -6px -24px)', transform: 'translateX(0)' },
         ],
         { duration: WIPE, easing: ARRIVE },
       );
@@ -184,47 +290,28 @@ export function createMotion(doc, { actual, fx, tree, treeRing, status }) {
       width: `${r.width}px`,
       height: `${r.height}px`,
     });
-    treeRing.animate(
-      [
-        { ...at(from), opacity: 1, offset: 0 },
-        { ...at(to), opacity: 1, offset: 0.75, easing: 'linear' },
-        { ...at(to), opacity: 0, offset: 1 },
-      ],
-      { duration: TRAVEL + 180, easing: EASE },
-    );
+    // The ring in flight is the only ring: the new button's own ring stays hidden for the whole flight (animate,
+    // so no class or style lands on it) and shows up in the same frame the flying one ends.
+    const hidden = '0 0 0 2px transparent, 0 0 0 4px transparent';
+    current.animate([{ boxShadow: hidden }, { boxShadow: hidden }], { duration: TRAVEL, easing: 'steps(1, end)' });
+    treeRing.animate([{ ...at(from), opacity: 1 }, { ...at(to), opacity: 1 }], { duration: TRAVEL, easing: EASE });
   }
 
   // ---------- small ones ----------
 
-  // A new line of the action log: it is wiped in from the top and the older lines slide down to make room.
+  // A new line of the action log: the new line and the older ones below it move down together as one block.
   function entered(li) {
     if (off()) return;
-    const height = li.getBoundingClientRect().height;
-    li.animate(
-      [
-        { clipPath: 'inset(0 0 100% 0)', transform: 'translateY(-8px)' },
-        { clipPath: 'inset(0 0 0 0)', transform: 'translateY(0)' },
-      ],
-      { duration: 320, easing: ARRIVE },
-    );
-    for (let el = li.nextElementSibling; el; el = el.nextElementSibling) {
-      el.animate([{ transform: `translateY(${-height}px)` }, { transform: 'translateY(0)' }], {
-        duration: 320,
-        easing: EASE,
-      });
-    }
+    slideInLine(li);
   }
 
-  // The status line got a new sentence.
+  // The status line got a new sentence: the box stays, only the text rises into it.
   function said() {
-    if (off() || !status) return;
-    status.animate(
-      [
-        { clipPath: 'inset(0 0 100% 0)', transform: 'translateY(6px)' },
-        { clipPath: 'inset(0 0 0 0)', transform: 'translateY(0)' },
-      ],
-      { duration: 220, easing: ARRIVE },
-    );
+    if (off() || !statusText) return;
+    statusText.animate([{ transform: 'translateY(100%)' }, { transform: 'translateY(0)' }], {
+      duration: 220,
+      easing: ARRIVE,
+    });
   }
 
   return { before, after, treeBefore, treeAfter, entered, said };

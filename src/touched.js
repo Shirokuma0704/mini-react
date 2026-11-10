@@ -13,6 +13,38 @@
 
 const EMPTY = { added: [], removed: [], moved: [], attrs: [], text: [], count: 0 };
 
+// Sorts MutationRecords into added / removed / moved / attrs / text (see the list at the top). Pure: no DOM writes.
+export function classify(records, container) {
+  const added = new Set();
+  const removed = new Set();
+  const attrs = new Set();
+  const text = new Set();
+  for (const record of records) {
+    if (record.type === 'childList') {
+      for (const node of record.addedNodes) added.add(node);
+      for (const node of record.removedNodes) removed.add(node);
+    } else if (record.type === 'attributes') {
+      attrs.add(record.target);
+    } else if (record.type === 'characterData') {
+      text.add(record.target);
+    }
+  }
+  const moved = [...added].filter((node) => removed.has(node) && container.contains(node));
+  for (const node of moved) {
+    added.delete(node);
+    removed.delete(node);
+  }
+  // A node that came and went within one pass never stayed in 실제 영역.
+  for (const node of [...added]) {
+    if (!container.contains(node)) {
+      added.delete(node);
+      removed.delete(node);
+    }
+  }
+  const all = new Set([...added, ...removed, ...moved, ...attrs, ...text]);
+  return { added: [...added], removed: [...removed], moved, attrs: [...attrs], text: [...text], count: all.size };
+}
+
 export function watchTouched(container, doc) {
   const Observer = doc.defaultView?.MutationObserver;
   if (!Observer) return { take: () => EMPTY };
@@ -21,34 +53,7 @@ export function watchTouched(container, doc) {
   observer.observe(container, { childList: true, subtree: true, attributes: true, characterData: true });
 
   function take() {
-    const added = new Set();
-    const removed = new Set();
-    const attrs = new Set();
-    const text = new Set();
-    for (const record of observer.takeRecords()) {
-      if (record.type === 'childList') {
-        for (const node of record.addedNodes) added.add(node);
-        for (const node of record.removedNodes) removed.add(node);
-      } else if (record.type === 'attributes') {
-        attrs.add(record.target);
-      } else if (record.type === 'characterData') {
-        text.add(record.target);
-      }
-    }
-    const moved = [...added].filter((node) => removed.has(node) && container.contains(node));
-    for (const node of moved) {
-      added.delete(node);
-      removed.delete(node);
-    }
-    // A node that came and went within one pass never stayed in 실제 영역.
-    for (const node of [...added]) {
-      if (!container.contains(node)) {
-        added.delete(node);
-        removed.delete(node);
-      }
-    }
-    const all = new Set([...added, ...removed, ...moved, ...attrs, ...text]);
-    return { added: [...added], removed: [...removed], moved, attrs: [...attrs], text: [...text], count: all.size };
+    return classify(observer.takeRecords(), container);
   }
 
   return { take };

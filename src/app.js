@@ -39,13 +39,18 @@ export function mountApp(doc, { now } = {}) {
     actionlog: doc.getElementById('actionlog'),
   };
 
+  // The status text lives in one inner span, so motion can move the text while the blue box stays steady.
+  const statusText = doc.createElement('span');
+  statusText.className = 'status-text';
+  els.status.appendChild(statusText);
+
   // Motion (src/motion.js). In jsdom every call is a no-op.
   const motion = createMotion(doc, {
     actual: els.actual,
     fx: doc.getElementById('actual-fx'),
     tree: els.tree,
     treeRing: doc.getElementById('tree-ring'),
-    status: els.status,
+    statusText,
   });
 
   // §2-6: one line per action, newest on top.
@@ -58,7 +63,7 @@ export function mountApp(doc, { now } = {}) {
   };
 
   function say(text) {
-    els.status.textContent = text;
+    statusText.textContent = text;
     motion.said();
   }
 
