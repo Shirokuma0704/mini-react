@@ -16,6 +16,7 @@ import { patch } from './patch.js';
 import { debugLines, renderDebug } from './debugView.js';
 import { createActionLog } from './actionLog.js';
 import { watchTouched } from './touched.js';
+import { createMotion } from './motion.js';
 
 const EMPTY_ROOT = { kind: 'element', tag: 'div', attrs: {}, children: [] };
 
@@ -38,11 +39,27 @@ export function mountApp(doc, { now } = {}) {
     actionlog: doc.getElementById('actionlog'),
   };
 
+  // Motion (src/motion.js). In jsdom every call is a no-op.
+  const motion = createMotion(doc, {
+    actual: els.actual,
+    fx: doc.getElementById('actual-fx'),
+    tree: els.tree,
+    treeRing: doc.getElementById('tree-ring'),
+    status: els.status,
+  });
+
   // §2-6: one line per action, newest on top.
-  const actions = createActionLog(els.actionlog, doc, now);
+  const actionLog = createActionLog(els.actionlog, doc, now);
+  const actions = {
+    add(entry) {
+      motion.entered(actionLog.add(entry));
+    },
+    entries: actionLog.entries,
+  };
 
   function say(text) {
     els.status.textContent = text;
+    motion.said();
   }
 
   // §2-1: warning line under the text box. Shown only, never blocks editing.
@@ -79,8 +96,13 @@ export function mountApp(doc, { now } = {}) {
   const watcher = watchTouched(els.actual, doc);
   sync.setSource(rootToHtml(history.current().vdom));
 
+  const drawn = new Set(); // version ids already in the tree drawing; a new one gets its entrance motion
   function refresh() {
+    const ringFrom = motion.treeBefore();
     renderTree(els.tree, history, doc, goto);
+    const fresh = history.all().map((n) => n.id).filter((id) => !drawn.has(id));
+    for (const id of fresh) drawn.add(id);
+    motion.treeAfter(ringFrom, drawn.size === fresh.length ? [] : fresh); // nothing moves on the first drawing
     els.movelog.textContent = logText(history);
     els.back.disabled = !history.canBack();
     els.forward.disabled = !history.canForward();
@@ -95,8 +117,10 @@ export function mountApp(doc, { now } = {}) {
   // diff the two versions, patch 실제 영역 with the result, and show the same result in the debug panel.
   function apply(fromRoot, toRoot) {
     const changes = diff(fromRoot, toRoot);
+    const snap = motion.before();
     patch(els.actual, changes, doc);
     const touched = watcher.take();
+    motion.after(snap, touched);
     showDebug(fromRoot, toRoot, changes);
     return { changes, touched };
   }

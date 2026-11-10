@@ -39,6 +39,17 @@ Run started 11-09 ~16:30 in a fork session. Role split (his decision 11-09, orch
 | 21 | controlled form boxes: input/textarea/select value and checkbox checked follow state on every render; a box given value/checked with no handler is locked (§4-10, grilled 11-09 evening Q1-Q3 after a code review found patch only set the attribute) | 14, 15, 16 | test/controlled.test.js 17/17 by Opus first (13 failed before, 4 guards: caret ×2, free boxes, Phase 1 not locked); impl by Sonnet: src/h.js props slot, new src/controlled.js syncProps, 2 calls in src/component.js. Full run 367/368 (test-run-30.log): the 1 fail is row 22's test, written before row 22 was built. Real-browser check 11-09 between 19:07 and 19:16 (Claude app browser, hooks.html new 입력칸 card) FAILED: a real checkbox click fires input → (browser drains microtasks) → change, so the 2-microtask restore flipped the box back before onChange read it (reproduced by running in the page: input:false, change:true). 4 tests added by Opus (real-browser timing section), impl fix by Sonnet: restore is a task (rAF, else setTimeout 0). 374/374 (test-run-32.log); real clicks/typing rechecked OK, no console errors | skipped (his "일단 넘어가", 11-09 evening) | see git log | ✔ 11-09 20:07 (hooks.html 입력칸 card: "비워짐; 고정에 뭐가 안써짐; 체크가 해제됨, 잠긴체크는 안눌림 / 확인") | jungle-notes/mini-react/입력칸 값 (제어 컴포넌트).md |
 | 22 | a direct update() drops the pending batched re-render; a set during/after it is kept (§4-4, grilled 11-09 evening Q4; was the Codex bundle r1 queue note) | 17 | 3 tests appended to test/batch.test.js by Opus first (1 failed before, 2 boundary guards passed); impl by Sonnet in src/component.js only: update() lowers updateQueued first, the microtask renders only if the flag is still up. 370/370 (test-run-31.log, includes 2 page tests of the row 21 card committed next) | skipped (his "일단 넘어가", 11-09 evening) | see git log | ✔ 11-09 20:09 (ran node --test --test-name-pattern=Q4 test/batch.test.js himself, 3/3 pass; render counts matched his expectation: "맞아") | jungle-notes/mini-react/묶기 (batching).md (section added) |
 
+### Verification page polish (his request 11-10 ~13:45: "좀더 깔끔하게", "좀더 모션", "무슨 액션이있었는지 로그")
+
+Not a spec'd orchestrate run: one chat request, built by Opus directly (design work stays on Opus). Spec: new §2-6 in ../spec-draft.md (his one line + AI-filled details), §2-5 in ../spec.md.
+
+| # | Feature | Depends on | Tests | Codex | Commit | Him | Why doc |
+|---|---------|------------|-------|-------|--------|-----|---------|
+| 23 | action log: one line per action (load / sample / Patch ×3 outcomes / back / forward / tree click), newest on top; counts of the four change kinds taken from the diff result + "건드린 노드 N개" from a MutationObserver on 실제 영역 (src/touched.js) (§2-6) | 8, 10 | test/actionLog.test.js 11 tests written first; 385/385 at the commit | 없음: not run (not asked; offer it to him) | 3a97cd4 | | jungle-notes/mini-react/액션 로그와 모션.md |
+| 24 | page look + motion: no card around every section, action log in a sticky right rail (≥1180px), design.md tokens with light/dark; src/motion.js: FLIP slide of shifted nodes, boxes on the nodes patch touched (from touched.js, not from the diff), removed-node ghost, tree ring travelling to the new "지금", new tree node / log line / status wipe-in; debug lines painted in by CSS | 23 | test/motion.test.js 4 tests (guards only: 실제 영역 stays attribute-free, reduced motion = nothing); 389/389 (test-run-33.log) | 없음: not run (not asked; offer it to him) | see git log | | same doc |
+
+Real-browser check of rows 23-24 (11-10 13:58, Claude app built-in browser on port 5175, 1400×900, script-driven clicks): dark + light screenshots taken mid-motion and after; a Patch with text change + attr + insert + remove + move showed 5 boxes (지워짐/추가/자리/속성/글자), 48 animations started, 0 left running and 0 boxes left after 3 s, 실제 영역 innerHTML had no style/class added, no console errors; back → log line + tree "지금" on v1; hooks.html still lays out (light). NOT checked: the timed playback watched by eye frame by frame (only two still frames), widths below 1180px, typing by hand, reduced-motion in a real browser (jsdom test only), Firefox/Safari.
+
 18 and 19 are independent of each other; everything else is a chain.
 
 Ahead of his verification (Phase 2): 0. Rows 14-16 ✔ 16:47, 17-18 ✔ 17:06, 19-20 ✔ 17:17, 21 ✔ 20:07, 22 ✔ 20:09 (by test run, no page card).
@@ -52,7 +63,7 @@ Run of 11-09 after the diff grill: normal orchestrate stops again (the "끝까�
 Order note: debug panel (scope 6) comes after diff/patch (scope 8) because it colors from the diff result.
 
 Ahead of his verification: 0 (rows 2-13 ✔ 11-09 14:50).
-Latest full run: test-run-21.log, 193/193 pass.
+Latest full run: test-run-33.log, 389/389 pass (11-10).
 
 ## Real-browser check of row 10 (11-09, before 14:26, Claude app built-in browser, npm start on port 5174)
 Driven by script in the page (not typed): (1) sample 1, unkeyed, new li put before the first + text edit → Patch → old li elements reused (same objects), colors follow index pairing (expected for unkeyed lists, §3-2); (2) indented keyed [a,b,c] → [c,x,a,b] → 실제 영역 has no key attributes, preview keeps them, li elements a/b/c reused, c's group moved, x's group added, trailing "
@@ -75,6 +86,11 @@ Raw replies: docs/agent/codex/<feature>-r<round>.md (model gpt-6.1-sol, reasonin
 
 ## Open disagreements / unsure spots
 <!-- file:line — what — who raised it (me / Codex) -->
+- src/touched.js — "건드린 노드" = different nodes in the observer's records: added, removed, moved (removed + added in one pass), attribute targets, text targets. Nodes inside a newly inserted subtree are not counted one by one (only its top node). The same content going forward and back can give different counts (seen: 10 vs 9) because insert/remove are not symmetric in whitespace grouping — me (row 23)
+- src/actionLog.js — sync events (text box ↔ preview, §2-1) are NOT logged; "no more back/forward" cannot happen through the buttons (disabled), so it has no line — me (row 23)
+- src/motion.js — boxes for a text node use a Range rect; blank text nodes get no box although they count in "건드린 노드". A box is drawn at the node's final place and does not follow later layout changes (it lives 1.9 s). Rapid clicks: clearFx() drops the earlier boxes — me (row 24)
+- src/motion.js — FLIP uses translate only (size changes are not animated) and inline elements ignore transform, so an inline node that moved inside a line jumps — me (row 24)
+- style.css — --del-text changed #a1161f → #c50018 (light), dark add/del/ring retuned; contrast computed 11-10 (all text pairs ≥ 4.6, ring ≥ 4.6 on bg). Sample content inside .render gets link color from the page (CSS only) — me (row 24)
 - src/lint.js (keyIn) — key read by an attribute tokenizer: first key wins, decimal/hex refs and &amp; &lt; &gt; &quot; &apos; decoded, other named refs left as written; invalid code points (0, >0x10FFFF, surrogates) left as written; odd attribute names may still differ from the browser parser (not cross-checked beyond the tests) — Sonnet worker, after Codex bundle r1 F3
 - src/component.js (buildRoot catch) — a rejected render restores the slot array snapshot (slot objects shared, so setters keep working) and hookCount, clears every effect pending, empties dropped; memo value/deps recomputed during a failed render are NOT undone (cache stays consistent with its deps) — Sonnet worker, after Codex bundle r1 F1/F2
 - src/component.js (takeSlot/runEffects) — F5 policy (Opus, spec silent): an effect slot thrown away by a kind swap keeps its cleanup, called after patch before that render's effects; not called if the render is rejected — Codex bundle r1 F5

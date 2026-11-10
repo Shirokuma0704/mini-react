@@ -7,6 +7,7 @@ This is his real mini React build (from 11-09), grown from the 11-06 trial run (
 ## Specs
 - Spec: ../spec-draft.md — §1 VDOM, §2 verification page, §3 diff, §4 Phase 2 hooks + §4-10 controlled boxes all built (rows 1-22 in progress.md); §4-9 final demo page not decided
 - Pages: index.html = Phase 1 verification page; hooks.html = Phase 2 check page (one card per hook feature, render-count probes)
+- Verification page extras (11-10, rows 23-24, spec §2-6): action log (src/actionLog.js), real-DOM touch watcher (src/touched.js), motion (src/motion.js). Motion must never write a class/attribute into #actual or #preview: use element.animate or the #actual-fx layer
 - Phase 2 roles (his decision 11-09): Opus writes tests first, a Sonnet worker implements and may not edit tests
 - Framework decisions: ../agent-framework-spec.md
 

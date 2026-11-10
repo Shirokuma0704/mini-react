@@ -6,10 +6,11 @@
   <title>mini-react 검증 페이지</title>
   <link rel="stylesheet" href="./style.css">
 </head>
-<body>
+<body class="verify">
   <header class="top">
-    <h1>mini-react 검증 페이지</h1>
     <p class="kicker">Phase 1 · 실제 DOM → VDOM → diff → patch</p>
+    <h1>mini-react 검증 페이지</h1>
+    <a class="toplink" href="./hooks.html">Phase 2 훅 확인 페이지 →</a>
   </header>
 
   <nav class="controls" aria-label="조작">
@@ -21,49 +22,66 @@
     <output id="status" class="status" aria-live="polite"></output>
   </nav>
 
-  <main class="areas">
-    <section class="panel">
-      <h2>실제 영역 <span class="hint">patch가 바꾸는 곳</span></h2>
-      <div id="actual" class="render"></div>
-    </section>
+  <div class="page">
+    <div class="work">
+      <main class="areas">
+        <section class="panel">
+          <h2>실제 영역 <span class="hint">patch가 바꾸는 곳</span></h2>
+          <div class="stage">
+            <div id="actual" class="render"></div>
+            <div id="actual-fx" class="fx" aria-hidden="true"></div>
+          </div>
+          <p class="legend">
+            patch가 건드린 노드에 잠깐 테두리가 떠요.
+            <span class="key add">추가</span>
+            <span class="key chg">글자 · 속성 고침</span>
+            <span class="key move">자리 고침</span>
+            <span class="key del">지워짐</span>
+          </p>
+        </section>
 
-    <section class="panel">
-      <h2>테스트 영역 <span class="hint">글자 칸이 기준이에요</span></h2>
-      <label class="sub" for="source">HTML 글자 칸</label>
-      <textarea id="source" spellcheck="false" autocomplete="off"></textarea>
-      <p id="warning" class="warning" role="status"></p>
-      <p class="sub">미리보기 <span class="hint">여기서 고쳐도 돼요</span></p>
-      <div id="preview" class="render" contenteditable="true"></div>
-    </section>
-  </main>
+        <section class="panel">
+          <h2>테스트 영역 <span class="hint">글자 칸이 기준이에요</span></h2>
+          <label class="sub" for="source">HTML 글자 칸</label>
+          <textarea id="source" spellcheck="false" autocomplete="off"></textarea>
+          <p id="warning" class="warning" role="status"></p>
+          <p class="sub">미리보기 <span class="hint">여기서 고쳐도 돼요</span></p>
+          <div id="preview" class="render" contenteditable="true"></div>
+        </section>
+      </main>
 
-  <section class="lower">
-    <section class="panel">
-      <h2>히스토리</h2>
-      <div id="tree" class="tree"></div>
-      <p class="sub">이동 로그</p>
-      <p id="movelog" class="movelog"></p>
-    </section>
+      <section class="lower">
+        <section class="panel">
+          <h2>히스토리 <span class="hint">버전을 누르면 그리로 가요</span></h2>
+          <div class="tree-wrap">
+            <div id="tree" class="tree"></div>
+            <div id="tree-ring" class="tree-ring" aria-hidden="true"></div>
+          </div>
+          <p class="sub">이동 로그</p>
+          <p id="movelog" class="movelog"></p>
+        </section>
 
-    <section class="panel">
-      <h2>디버그 칸 <span class="hint">diff 결과로 색칠해요</span></h2>
-      <div class="debug">
-        <div>
-          <p class="sub">이전</p>
-          <pre id="debug-old" class="code"></pre>
-        </div>
-        <div>
-          <p class="sub">새 것</p>
-          <pre id="debug-new" class="code"></pre>
-        </div>
-      </div>
-    </section>
-  </section>
+        <section class="panel">
+          <h2>디버그 칸 <span class="hint">diff 결과로 색칠해요</span></h2>
+          <div class="debug">
+            <div>
+              <p class="sub">이전</p>
+              <pre id="debug-old" class="code"></pre>
+            </div>
+            <div>
+              <p class="sub">새 것</p>
+              <pre id="debug-new" class="code"></pre>
+            </div>
+          </div>
+        </section>
+      </section>
+    </div>
 
-  <section class="panel">
-    <h2>액션 로그 <span class="hint">위가 최근이에요</span></h2>
-    <ol id="actionlog" class="actionlog"></ol>
-  </section>
+    <aside class="rail" aria-label="액션 로그">
+      <h2>액션 로그 <span class="hint">위가 최근이에요</span></h2>
+      <ol id="actionlog" class="actionlog"></ol>
+    </aside>
+  </div>
 
   <script type="module" src="./src/main.js"></script>
 </body>
