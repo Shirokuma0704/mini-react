@@ -14,10 +14,13 @@ import { SAMPLES } from './samples.js';
 import { diff } from './diff.js';
 import { patch } from './patch.js';
 import { debugLines, renderDebug } from './debugView.js';
+import { createActionLog } from './actionLog.js';
+import { watchTouched } from './touched.js';
 
 const EMPTY_ROOT = { kind: 'element', tag: 'div', attrs: {}, children: [] };
 
-export function mountApp(doc) {
+// options.now: the clock for the action log's time column (tests pass a fixed one).
+export function mountApp(doc, { now } = {}) {
   const els = {
     actual: doc.getElementById('actual'),
     source: doc.getElementById('source'),
@@ -32,7 +35,11 @@ export function mountApp(doc) {
     movelog: doc.getElementById('movelog'),
     debugOld: doc.getElementById('debug-old'),
     debugNew: doc.getElementById('debug-new'),
+    actionlog: doc.getElementById('actionlog'),
   };
+
+  // §2-6: one line per action, newest on top.
+  const actions = createActionLog(els.actionlog, doc, now);
 
   function say(text) {
     els.status.textContent = text;
@@ -57,6 +64,7 @@ export function mountApp(doc) {
     btn.addEventListener('click', () => {
       sync.setSource(sample.html);
       say(`글자 칸에 ${sample.name} 내용을 넣었어요. Patch를 눌러야 새 버전이 돼요.`);
+      actions.add({ action: 'sample', result: `${sample.name}을 글자 칸에 넣음 (Patch 전)` });
     });
     els.samples.appendChild(btn);
   }
@@ -67,6 +75,8 @@ export function mountApp(doc) {
   const v1 = htmlToVdom(SAMPLES[0].html, doc);
   renderInto(els.actual, v1, doc, { keys: false });
   const history = createHistory(v1);
+  // From here on every change to 실제 영역 comes from patch; the watcher reads what patch really touched (§2-6).
+  const watcher = watchTouched(els.actual, doc);
   sync.setSource(rootToHtml(history.current().vdom));
 
   function refresh() {
@@ -86,8 +96,9 @@ export function mountApp(doc) {
   function apply(fromRoot, toRoot) {
     const changes = diff(fromRoot, toRoot);
     patch(els.actual, changes, doc);
+    const touched = watcher.take();
     showDebug(fromRoot, toRoot, changes);
-    return changes;
+    return { changes, touched };
   }
 
   // Patch button. The text box is the source of truth (§2-1); pending preview edits are pushed into it first.
@@ -98,9 +109,16 @@ export function mountApp(doc) {
     if (r.result === 'same') {
       // §2-2 "바뀐 게 없으면 새 버전을 만들지 않고 알리기만 한다."
       say(`바뀐 게 없어요. 새 버전을 만들지 않았어요 (지금 ${before.label}).`);
+      actions.add({ action: 'patch', result: `바뀐 게 없어요 (${before.label} 그대로)` });
       return r;
     }
-    apply(before.vdom, r.node.vdom);
+    const { changes, touched } = apply(before.vdom, r.node.vdom);
+    actions.add({
+      action: 'patch',
+      result: `${before.label} → ${r.node.label} · ${r.result === 'created' ? '새 버전' : '같은 갈래의 같은 버전으로 이동'}`,
+      changes,
+      touched: touched.count,
+    });
     say(
       r.result === 'created'
         ? `새 버전 ${r.node.label} 만들었어요.`
@@ -111,7 +129,7 @@ export function mountApp(doc) {
   }
 
   // back / forward / tree click: 실제 영역 and the test area change together.
-  function move(step, failText) {
+  function move(action, step, failText) {
     sync.flush();
     const before = history.current();
     const node = step();
@@ -119,17 +137,18 @@ export function mountApp(doc) {
       if (failText) say(failText);
       return null;
     }
-    apply(before.vdom, node.vdom);
+    const { changes, touched } = apply(before.vdom, node.vdom);
     sync.setSource(rootToHtml(node.vdom));
     say(`${before.label} → ${node.label}`);
+    actions.add({ action, result: `${before.label} → ${node.label}`, changes, touched: touched.count });
     refresh();
     return node;
   }
 
-  const back = () => move(() => history.back(), '더 뒤로 갈 버전이 없어요.');
-  const forward = () => move(() => history.forward(), '더 앞으로 갈 버전이 없어요.');
+  const back = () => move('back', () => history.back(), '더 뒤로 갈 버전이 없어요.');
+  const forward = () => move('forward', () => history.forward(), '더 앞으로 갈 버전이 없어요.');
   function goto(id) {
-    return move(() => history.goto(id), null);
+    return move('tree', () => history.goto(id), null);
   }
 
   els.patch.addEventListener('click', doPatch);
@@ -139,6 +158,7 @@ export function mountApp(doc) {
   showDebug(EMPTY_ROOT, history.current().vdom, []);
   refresh();
   say(`${history.current().label}: 실제 영역의 샘플 1에서 시작했어요.`);
+  actions.add({ action: 'load', result: `샘플 1로 ${history.current().label}을 만듦` });
 
-  return { els, sync, history, patch: doPatch, back, forward, goto };
+  return { els, sync, history, patch: doPatch, back, forward, goto, log: actions.entries };
 }
