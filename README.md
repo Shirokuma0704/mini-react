@@ -1,10 +1,18 @@
 # mini-react
 
+**데모**: [검증 페이지](https://shirokuma0704.github.io/mini-react/) · [훅 확인 페이지](https://shirokuma0704.github.io/mini-react/hooks.html) (설치 없이 브라우저에서 바로 열려요)
+
 React의 핵심 흐름을 바닐라 JavaScript로 다시 만든 프로젝트예요. 실제 DOM을 VDOM으로 읽고, `diff`로 바뀐 곳을 찾고, `patch`로 그 노드만 고쳐요. 그 위에 `FunctionComponent`와 `useState` · `useEffect` · `useMemo`를 올렸어요.
 
-크래프톤 정글 "AI 함께하기" 과제예요. 코드는 AI가 먼저 쓰고, 명세 · 검증 · 이해를 사람이 맡는 형식이에요. 자세한 과정은 [만든 방식](#만든-방식)에 있어요.
+![검증 페이지에서 목록 맨 앞에 항목 하나를 더하고 Patch를 누른 뒤, 뒤로가기를 누르는 장면](docs/screenshots/patch-demo.gif)
 
-**데모**: [검증 페이지](https://shirokuma0704.github.io/mini-react/) · [훅 확인 페이지](https://shirokuma0704.github.io/mini-react/hooks.html) (설치 없이 브라우저에서 바로 열려요)
+글자 칸에서 목록 맨 앞에 항목 하나를 더하고 Patch를 누른 장면이에요. 액션 로그에 "추가 2 · 건드린 노드 2개"가 찍혀요. 새 `li`와 그 앞의 들여쓰기 글자 노드예요. 이어서 뒤로가기를 눌러요.
+
+| 기간 | 스택 | 역할 |
+| --- | --- | --- |
+| 2026-11-06 ~ 2026-11-11 (커밋 기준) | 바닐라 JavaScript (ES 모듈), `node --test` + jsdom | 명세 작성 · 검증 (구현 코드는 AI 작성) |
+
+크래프톤 정글 "AI 함께하기" 과제예요. 코드는 AI가 먼저 쓰고, 명세 · 검증 · 이해를 사람이 맡는 형식이에요. 자세한 과정은 [만든 방식](#만든-방식)에 있어요.
 
 - **프레임워크 · 번들러 없음.** 런타임 의존성이 없고, 개발 의존성은 테스트용 jsdom 하나예요.
 - **index가 밀려도 틀리지 않는 `patch`.** 아무것도 바꾸기 전에 모든 위치를 실제 노드 참조로 풀어 둬요.
