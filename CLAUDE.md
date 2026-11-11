@@ -14,6 +14,7 @@ This is his real mini React build (from 11-09), grown from the 11-06 trial run (
 ## Commands
 - Test: `npm test` (= `node --test`, Node v24; jsdom 31 as devDependency for a DOM)
 - Run: `npm start` → http://localhost:5173/ (server.js, Node http only; PORT env overrides). ES modules do not load from file://
+- Live: https://shirokuma0704.github.io/mini-react/ (GitHub Pages, branch build from master root, `.nojekyll`; every push to master redeploys). README screenshots: docs/screenshots/ (taken from the live site 11-11, 1280 wide, light)
 - Source is ES modules (`"type": "module"`) so it can later run in a browser unchanged.
 - src layout (11-11, his request): core/ = DOM↔VDOM, diff, patch, events; component/ = h, expand, hooks, controlled boxes; page-tools/ = touch watcher, motion, action log (both pages); verify-page/ = index.html; hooks-page/ = hooks.html. server.js serves only src/<folder>/<file>.js (one level). Tests stay flat in test/
 
