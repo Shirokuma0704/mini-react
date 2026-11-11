@@ -7,11 +7,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadPage } from './helpers/page.js';
-import { mountApp } from '../src/app.js';
-import { countChanges, countChips } from '../src/actionLog.js';
-import { diff } from '../src/diff.js';
-import { htmlToVdom } from '../src/render.js';
-import { SAMPLES } from '../src/samples.js';
+import { mountApp } from '../src/verify-page/app.js';
+import { countChanges, countChips } from '../src/page-tools/actionLog.js';
+import { diff } from '../src/core/diff.js';
+import { htmlToVdom } from '../src/core/render.js';
+import { SAMPLES } from '../src/verify-page/samples.js';
 
 function page() {
   const p = loadPage();

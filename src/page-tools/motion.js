@@ -6,7 +6,7 @@
 // (tests read it back with containerToVdom). Nodes inside it are animated with element.animate(), which leaves no
 // trace in the DOM, and the colored boxes live in a separate layer (#actual-fx) laid over it.
 //
-// What the boxes mark comes from src/touched.js (what patch REALLY touched), never from the diff result. So if patch
+// What the boxes mark comes from src/page-tools/touched.js (what patch REALLY touched), never from the diff result. So if patch
 // touched more than the diff said, the extra boxes show it.
 //
 // In jsdom (tests) element.animate does not exist, so every function below does nothing.
@@ -191,7 +191,7 @@ export function createMotion(doc, { actual, fx, tree, treeRing, statusText }) {
     anim.onfinish = () => el.remove();
   }
 
-  // Call right AFTER patch with what src/touched.js saw.
+  // Call right AFTER patch with what src/page-tools/touched.js saw.
   function after(snap, touched) {
     if (!snap || off()) return;
     clearFx();

@@ -9,8 +9,8 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 
 // The only files the pages need: index.html (Phase 1 verification page), hooks.html (Phase 2 check page),
-// style.css and the ES modules directly in src/.
-const ALLOWED = /^\/(?:index\.html|hooks\.html|style\.css|src\/[A-Za-z0-9_-]+\.js)$/;
+// style.css and the ES modules in src/<folder>/ (one folder level; folder names have no dot, so ".." cannot match).
+const ALLOWED = /^\/(?:index\.html|hooks\.html|style\.css|src\/[A-Za-z0-9_-]+\/[A-Za-z0-9_-]+\.js)$/;
 
 const TYPES = {
   '.html': 'text/html; charset=utf-8',

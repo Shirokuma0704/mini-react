@@ -3,7 +3,7 @@ export function stripKeys(node) {
   if (node.kind === 'text') return node;
   const attrs = {};
   for (const [k, val] of Object.entries(node.attrs)) {
-    // defineProperty, not attrs[k] = val: an attribute may be called "__proto__" (see src/domToVdom.js)
+    // defineProperty, not attrs[k] = val: an attribute may be called "__proto__" (see src/core/domToVdom.js)
     if (k !== 'key') Object.defineProperty(attrs, k, { value: val, enumerable: true, writable: true, configurable: true });
   }
   return { kind: 'element', tag: node.tag, attrs, children: node.children.map(stripKeys) };

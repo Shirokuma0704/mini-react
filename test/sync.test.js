@@ -5,7 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
-import { createSync } from '../src/sync.js';
+import { createSync } from '../src/verify-page/sync.js';
 
 function setup(html = '<p>one</p>\n<p>two</p>') {
   const dom = new JSDOM('<!DOCTYPE html><body><textarea id="s"></textarea><div id="p" contenteditable="true"></div></body>');

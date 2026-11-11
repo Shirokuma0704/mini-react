@@ -9,14 +9,14 @@ import { createSync } from './sync.js';
 import { lintHtml, warningLine } from './lint.js';
 import { createHistory } from './history.js';
 import { renderTree, logText } from './treeView.js';
-import { htmlToVdom, renderInto, rootToHtml } from './render.js';
+import { htmlToVdom, renderInto, rootToHtml } from '../core/render.js';
 import { SAMPLES } from './samples.js';
-import { diff } from './diff.js';
-import { patch } from './patch.js';
+import { diff } from '../core/diff.js';
+import { patch } from '../core/patch.js';
 import { debugLines, renderDebug } from './debugView.js';
-import { createActionLog } from './actionLog.js';
-import { watchTouched } from './touched.js';
-import { createMotion } from './motion.js';
+import { createActionLog } from '../page-tools/actionLog.js';
+import { watchTouched } from '../page-tools/touched.js';
+import { createMotion } from '../page-tools/motion.js';
 
 const EMPTY_ROOT = { kind: 'element', tag: 'div', attrs: {}, children: [] };
 
@@ -44,7 +44,7 @@ export function mountApp(doc, { now } = {}) {
   statusText.className = 'status-text';
   els.status.appendChild(statusText);
 
-  // Motion (src/motion.js). In jsdom every call is a no-op.
+  // Motion (src/page-tools/motion.js). In jsdom every call is a no-op.
   const motion = createMotion(doc, {
     actual: els.actual,
     fx: doc.getElementById('actual-fx'),

@@ -5,9 +5,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
-import { debugLines, renderDebug } from '../src/debugView.js';
-import { htmlToVdom } from '../src/render.js';
-import { diff } from '../src/diff.js';
+import { debugLines, renderDebug } from '../src/verify-page/debugView.js';
+import { htmlToVdom } from '../src/core/render.js';
+import { diff } from '../src/core/diff.js';
 
 const doc = new JSDOM('<!DOCTYPE html><body></body>').window.document;
 const OLD = htmlToVdom('<ul><li>a</li><li>b</li></ul>', doc);

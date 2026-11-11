@@ -2,8 +2,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
-import { createHistory } from '../src/history.js';
-import { renderTree, logText } from '../src/treeView.js';
+import { createHistory } from '../src/verify-page/history.js';
+import { renderTree, logText } from '../src/verify-page/treeView.js';
 
 const dom = new JSDOM('<!DOCTYPE html><body><div id="t"></div></body>');
 const doc = dom.window.document;

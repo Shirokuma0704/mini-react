@@ -10,7 +10,7 @@
 //   box does not flash the typed character), otherwise setTimeout 0. One pending restore per element (coalesced).
 //   The handler's own re-render is booked by queueMicrotask during the event, so it is done before the restore runs.
 // - A box whose new VDOM has no props stops being watched; its live value is left alone (the user's box).
-// Like src/events.js, the wanted values live on the real element (`el._controlled`); syncProps walks the new tree.
+// Like src/core/events.js, the wanted values live on the real element (`el._controlled`); syncProps walks the new tree.
 
 const WANTED = '_controlled';
 const LISTENING = '_controlledListening';

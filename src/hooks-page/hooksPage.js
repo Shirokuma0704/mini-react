@@ -4,8 +4,8 @@
 // "그린 횟수" (render count) is written OUTSIDE the component's container, by a wrapper around the component.
 // It is a probe for checking, not part of the component: it shows whether a set really re-ran the component
 // (spec §4-4 "같은 값이면 다시 그리지 않고 건너뛴다").
-import { h } from './h.js';
-import { FunctionComponent, useState, useEffect, useMemo } from './component.js';
+import { h } from '../component/h.js';
+import { FunctionComponent, useState, useEffect, useMemo } from '../component/component.js';
 import { watchLiveMotion, lineEntered } from './liveMotion.js';
 import { watchHooksLog } from './hooksLog.js';
 
@@ -310,7 +310,7 @@ export function mountHooksPage(doc, { tickMs = 1000, timerStartsRunning = true, 
 
   mountRulesCard(doc);
   new FunctionComponent(countRenders(Form, byId('form-renders'))).mount(byId('form'));
-  // The log starts after the first drawing: it records what happens from here on (src/hooksLog.js).
+  // The log starts after the first drawing: it records what happens from here on (src/hooks-page/hooksLog.js).
   watchHooksLog(doc, { now, onLine: (li, isNew) => lineEntered(doc, li, isNew) });
   watchLiveMotion(doc);
 }

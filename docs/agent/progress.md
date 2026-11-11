@@ -3,6 +3,9 @@
 Single source of truth for the orchestrate loop. One row per feature, in dependency order.
 "Him" is set only when 상철님 says he verified it. Features built but not "Him ✔" count as "ahead" (max 3).
 
+11-11: src/*.js moved into folders (see CLAUDE.md "src layout"). File paths in rows and docs/agent/codex/ written
+before that point to the old flat src/ (e.g. src/diff.js is now src/core/diff.js). No behaviour change; 400/400 tests.
+
 Run of 11-09 afternoon: goal file ../goals/01-verify-page.md ("끝까지 쭉") — build the Phase 1 verification page
 (spec-draft §2) without stopping between features; ONE handoff at the end. So the max-3-ahead stop is suspended for
 this run by his choice; rows 2-9 are all "ahead" until he checks them.

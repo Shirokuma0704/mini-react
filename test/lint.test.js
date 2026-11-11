@@ -3,9 +3,9 @@
 //        따옴표 없는 속성은 경고하지 않는다." Pure module: works on the text, no DOM.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { lintHtml, warningLine } from '../src/lint.js';
+import { lintHtml, warningLine } from '../src/verify-page/lint.js';
 import { JSDOM } from 'jsdom';
-import { htmlToVdom } from '../src/render.js';
+import { htmlToVdom } from '../src/core/render.js';
 
 const kinds = (html) => lintHtml(html).map((w) => `${w.kind}:${w.tag}`);
 

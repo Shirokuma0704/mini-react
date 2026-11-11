@@ -1,6 +1,6 @@
 // Deep equality of two VDOM nodes (spec §1 shape). Attribute order is ignored; everything else must match.
 // Used by diff's 양 끝 잘라내기 (spec §3-2) to tell "the same node" at the ends of a list.
-// Moved out of src/history.js (history re-exports it) so diff and history can share it without importing each other.
+// Moved out of src/verify-page/history.js (history re-exports it) so diff and history can share it without importing each other.
 export function vdomEqual(a, b) {
   if (a.kind !== b.kind) return false;
   if (a.kind === 'text') return a.text === b.text;

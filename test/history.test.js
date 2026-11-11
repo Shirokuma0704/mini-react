@@ -2,7 +2,7 @@
 // Each test quotes the spec line it checks. VDOMs here are tiny hand-made roots; any VDOM works.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createHistory, vdomEqual } from '../src/history.js';
+import { createHistory, vdomEqual } from '../src/verify-page/history.js';
 
 // A root VDOM whose only child is the text `s` — enough to tell versions apart.
 function v(s) {
@@ -176,7 +176,7 @@ test('vdomEqual: same content equal, attribute order ignored, any difference not
 // Spec §3-4 (Q15): "같은 버전" = diff returns an empty list. Checked as: for many pairs, commit says 'same'
 // exactly when diff(current, new) is empty.
 test('"same version" is decided by the diff: commit says same exactly when diff returns nothing', async () => {
-  const { diff } = await import('../src/diff.js');
+  const { diff } = await import('../src/core/diff.js');
   const li = (attrs, text) => ({ kind: 'element', tag: 'li', attrs, children: [{ kind: 'text', text }] });
   const root = (...children) => ({ kind: 'element', tag: 'div', attrs: {}, children });
   const cases = [

@@ -11,10 +11,10 @@
 //   from the tree.
 //
 // "Equal" = the diff returns no change (spec §3-4, Q15). For every input this gives the same answer as deep
-// equality (src/vdomEqual.js, still exported here for its old callers); the spec asks for the diff so that
+// equality (src/core/vdomEqual.js, still exported here for its old callers); the spec asks for the diff so that
 // "같은 버전" and "디버그 칸이 비어 있음" can never disagree.
-import { vdomEqual } from './vdomEqual.js';
-import { diff } from './diff.js';
+import { vdomEqual } from '../core/vdomEqual.js';
+import { diff } from '../core/diff.js';
 
 export { vdomEqual };
 

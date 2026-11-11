@@ -1,9 +1,9 @@
 // Loads index.html into jsdom and (optionally) mounts the app on it.
-// jsdom does not run <script type="module">, so the test imports src/app.js and calls mountApp itself —
-// the same call src/main.js makes in a real browser.
+// jsdom does not run <script type="module">, so the test imports src/verify-page/app.js and calls mountApp itself —
+// the same call src/verify-page/main.js makes in a real browser.
 import { readFileSync } from 'node:fs';
 import { JSDOM } from 'jsdom';
-import { mountApp } from '../../src/app.js';
+import { mountApp } from '../../src/verify-page/app.js';
 
 const INDEX = readFileSync(new URL('../../index.html', import.meta.url), 'utf8');
 

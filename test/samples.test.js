@@ -4,9 +4,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
-import { SAMPLES } from '../src/samples.js';
-import { lintHtml } from '../src/lint.js';
-import { htmlToVdom, rootToHtml, containerToVdom } from '../src/render.js';
+import { SAMPLES } from '../src/verify-page/samples.js';
+import { lintHtml } from '../src/verify-page/lint.js';
+import { htmlToVdom, rootToHtml, containerToVdom } from '../src/core/render.js';
 import { loadPage } from './helpers/page.js';
 import { stripKeys } from './helpers/vdom.js';
 

@@ -8,9 +8,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
-import { h } from '../src/h.js';
-import { FunctionComponent, useState } from '../src/component.js';
-import { htmlToVdom, renderInto } from '../src/render.js';
+import { h } from '../src/component/h.js';
+import { FunctionComponent, useState } from '../src/component/component.js';
+import { htmlToVdom, renderInto } from '../src/core/render.js';
 
 function setup() {
   const { window } = new JSDOM('<!DOCTYPE html><body><div id="c"></div></body>');

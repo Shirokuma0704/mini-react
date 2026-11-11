@@ -1,4 +1,4 @@
-// Tests for goal scope item 2: page layout. The page is index.html; src/app.js mounts behaviour onto it.
+// Tests for goal scope item 2: page layout. The page is index.html; src/verify-page/app.js mounts behaviour onto it.
 // The regions come from spec-draft §2 ("과제 문서로 이미 정해진 것") and §2-1..2-4.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';

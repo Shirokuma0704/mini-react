@@ -1,10 +1,10 @@
-// Smoke tests for the Phase 2 check page (hooks.html + src/hooksPage.js). The page is Opus's (page design stays on
+// Smoke tests for the Phase 2 check page (hooks.html + src/hooks-page/hooksPage.js). The page is Opus's (page design stays on
 // Opus, orchestrate §1); these tests only pin that each card does what its hint line says.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { JSDOM } from 'jsdom';
-import { mountHooksPage } from '../src/hooksPage.js';
+import { mountHooksPage } from '../src/hooks-page/hooksPage.js';
 
 const html = readFileSync(new URL('../hooks.html', import.meta.url), 'utf8');
 const settle = () => new Promise((r) => setTimeout(r, 0));

@@ -20,11 +20,11 @@ test('GET / serves index.html as HTML', async () => {
   const res = await fetch(`${base}/`);
   assert.equal(res.status, 200);
   assert.match(res.headers.get('content-type'), /^text\/html/);
-  assert.match(await res.text(), /<script type="module" src="\.\/src\/main\.js"><\/script>/);
+  assert.match(await res.text(), /<script type="module" src="\.\/src\/verify-page\/main\.js"><\/script>/);
 });
 
 test('ES module files are served with a JavaScript MIME type', async () => {
-  for (const path of ['/src/main.js', '/src/app.js', '/src/render.js', '/src/domToVdom.js']) {
+  for (const path of ['/src/verify-page/main.js', '/src/verify-page/app.js', '/src/core/render.js', '/src/core/domToVdom.js', '/src/hooks-page/hooksMain.js', '/src/component/component.js']) {
     const res = await fetch(`${base}${path}`);
     assert.equal(res.status, 200, path);
     assert.match(res.headers.get('content-type'), /^text\/javascript/, path);
@@ -35,7 +35,7 @@ test('the Phase 2 hooks check page is served as HTML and loads its own entry mod
   const res = await fetch(`${base}/hooks.html`);
   assert.equal(res.status, 200);
   assert.match(res.headers.get('content-type'), /^text\/html/);
-  assert.match(await res.text(), /<script type="module" src="\.\/src\/hooksMain\.js"><\/script>/);
+  assert.match(await res.text(), /<script type="module" src="\.\/src\/hooks-page\/hooksMain\.js"><\/script>/);
 });
 
 test('the stylesheet is served as CSS', async () => {
@@ -61,14 +61,14 @@ function rawGet(path) {
 }
 
 test('paths outside the folder are refused', async () => {
-  for (const path of ['/../spec-draft.md', '/..%2fspec-draft.md', '/%2e%2e/spec-draft.md', '/src/..%2f..%2fspec-draft.md', '/..%5cspec-draft.md']) {
+  for (const path of ['/../spec-draft.md', '/..%2fspec-draft.md', '/%2e%2e/spec-draft.md', '/src/..%2f..%2fspec-draft.md', '/src/core/..%2f..%2f..%2fspec-draft.md', '/..%5cspec-draft.md']) {
     const status = await rawGet(path);
     assert.ok(status === 400 || status === 403 || status === 404, `${path} -> ${status}`);
   }
 });
 
 // Codex layout r2: Windows stream aliases (::$INDEX_ALLOCATION) and trailing-dot names reach node_modules too.
-// So the server serves an allowlist (index.html, style.css, src/*.js) instead of blocking names.
+// So the server serves an allowlist (index.html, style.css, src/<folder>/*.js) instead of blocking names.
 test('Windows path aliases cannot reach node_modules', async () => {
   for (const path of [
     '/node_modules::$INDEX_ALLOCATION/jsdom/package.json',

@@ -1,4 +1,4 @@
-// Tests for the real diff, spec-draft §3 (grilled 11-09 13:04-14:14, Q1-Q15). Written before src/diff.js.
+// Tests for the real diff, spec-draft §3 (grilled 11-09 13:04-14:14, Q1-Q15). Written before src/core/diff.js.
 //
 // Change list (spec §3-4 "{ 종류, 위치, 새 노드 }", refined by the orchestrator — see docs/agent/progress.md Open):
 //   { type: 'insert',  path, parentOldPath, node }            추가    path = where it sits in the NEW tree
@@ -11,8 +11,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
-import { diff } from '../src/diff.js';
-import { htmlToVdom } from '../src/render.js';
+import { diff } from '../src/core/diff.js';
+import { htmlToVdom } from '../src/core/render.js';
 
 const doc = new JSDOM('<!DOCTYPE html><body></body>').window.document;
 const v = (html) => htmlToVdom(html, doc);

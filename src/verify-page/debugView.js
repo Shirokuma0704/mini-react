@@ -4,8 +4,8 @@
 // So this file never compares old and new itself. It lays out each VDOM one line per node piece, gives every line
 // the path of its node, and paints the lines a change points at.
 //
-// Paths = child indexes from the root, as in src/diff.js. The root is not shown (it is the wrapper, see
-// src/render.js), so the first lines have paths [0], [1], ... The old side reads a change's place in the OLD tree
+// Paths = child indexes from the root, as in src/core/diff.js. The root is not shown (it is the wrapper, see
+// src/core/render.js), so the first lines have paths [0], [1], ... The old side reads a change's place in the OLD tree
 // (oldPath; for remove, path), the new side its place in the NEW tree (path; remove has none there).
 //
 // Colors, spec §3-4: 추가 = add (new side), 지워짐 = del (old side), 교체 = del old + add new, 고침 = chg both sides

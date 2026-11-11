@@ -1,14 +1,14 @@
-// Motion on the verification page (src/motion.js, his request 11-10). jsdom draws nothing, so the motion itself is
+// Motion on the verification page (src/page-tools/motion.js, his request 11-10). jsdom draws nothing, so the motion itself is
 // only checked in a real browser (docs/agent/progress.md). These tests pin the two promises that CAN be checked here:
 // - motion never writes into 실제 영역 or the preview (no class, no style, no extra node), and
 // - with or without element.animate the page works the same.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadPage } from './helpers/page.js';
-import { mountApp } from '../src/app.js';
-import { containerToVdom, htmlToVdom } from '../src/render.js';
+import { mountApp } from '../src/verify-page/app.js';
+import { containerToVdom, htmlToVdom } from '../src/core/render.js';
 import { stripKeys } from './helpers/vdom.js';
-import { SAMPLES } from '../src/samples.js';
+import { SAMPLES } from '../src/verify-page/samples.js';
 
 // A page whose elements can "animate": every call is recorded, nothing moves.
 function animatedPage() {

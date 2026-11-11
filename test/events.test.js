@@ -6,18 +6,18 @@
 //
 // Contract pinned here:
 //   - render.js: drawing an element whose VDOM has `events` attaches one relay listener per event type.
-//   - src/events.js exports syncEvents(container, root): after patch, walk the new root VDOM and the container's DOM
+//   - src/core/events.js exports syncEvents(container, root): after patch, walk the new root VDOM and the container's DOM
 //     side by side (실제 영역 is always drawn from a VDOM, so child indexes match) and point each element's stored
 //     handler at the new function — adding a relay for a type seen for the first time, emptying the pointer for a
 //     type that is gone. It never calls addEventListener for a type that already has a relay on that element.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
-import { h } from '../src/h.js';
-import { diff } from '../src/diff.js';
-import { patch } from '../src/patch.js';
-import { renderInto, vdomToDom } from '../src/render.js';
-import { syncEvents } from '../src/events.js';
+import { h } from '../src/component/h.js';
+import { diff } from '../src/core/diff.js';
+import { patch } from '../src/core/patch.js';
+import { renderInto, vdomToDom } from '../src/core/render.js';
+import { syncEvents } from '../src/core/events.js';
 
 function setup() {
   const { window } = new JSDOM('<!DOCTYPE html><body><div id="c"></div></body>');

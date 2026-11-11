@@ -3,8 +3,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadPage } from './helpers/page.js';
-import { SAMPLES } from '../src/samples.js';
-import { htmlToVdom, containerToVdom } from '../src/render.js';
+import { SAMPLES } from '../src/verify-page/samples.js';
+import { htmlToVdom, containerToVdom } from '../src/core/render.js';
 import { stripKeys } from './helpers/vdom.js';
 
 function page() {

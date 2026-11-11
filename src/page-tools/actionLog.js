@@ -4,7 +4,7 @@
 // A line that changed 실제 영역 carries two independent numbers:
 // - chips: the four change kinds counted from OUR diff's result (the same source the debug panel colors from, §2-3).
 //   Nothing is compared here; a wrong diff shows up as wrong counts.
-// - touched: how many nodes of 실제 영역 were really touched, counted by src/touched.js (a MutationObserver).
+// - touched: how many nodes of 실제 영역 were really touched, counted by src/page-tools/touched.js (a MutationObserver).
 //   This one does not come from the diff, so "patch touches only what changed" can be read off the line.
 
 // diff result -> { insert, remove, replace, text, attrs, move }

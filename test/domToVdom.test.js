@@ -5,7 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
-import { domToVdom } from '../src/domToVdom.js';
+import { domToVdom } from '../src/core/domToVdom.js';
 
 // Parse an HTML fragment and return its first node, using jsdom as the DOM.
 function firstNode(html) {

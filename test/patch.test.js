@@ -1,4 +1,4 @@
-// Tests for patch, spec-draft §3 + the assignment's "바뀐 부분만 실제 영역에 반영". Written before src/patch.js.
+// Tests for patch, spec-draft §3 + the assignment's "바뀐 부분만 실제 영역에 반영". Written before src/core/patch.js.
 // Replaces test/diffPatch.test.js, which pinned only the PROVISIONAL "replace the root" contract.
 //
 // What is checked:
@@ -8,9 +8,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
-import { diff } from '../src/diff.js';
-import { patch } from '../src/patch.js';
-import { htmlToVdom, containerToVdom, renderInto } from '../src/render.js';
+import { diff } from '../src/core/diff.js';
+import { patch } from '../src/core/patch.js';
+import { htmlToVdom, containerToVdom, renderInto } from '../src/core/render.js';
 import { stripKeys } from './helpers/vdom.js';
 
 const doc = new JSDOM('<!DOCTYPE html><body></body>').window.document;

@@ -9,7 +9,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { JSDOM } from 'jsdom';
-import { mountHooksPage } from '../src/hooksPage.js';
+import { mountHooksPage } from '../src/hooks-page/hooksPage.js';
 
 const html = readFileSync(new URL('../hooks.html', import.meta.url), 'utf8');
 const settle = () => new Promise((r) => setTimeout(r, 0));

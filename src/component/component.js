@@ -26,15 +26,15 @@
 //            Calling update() directly is still immediate; only setters are batched. Each component batches on its own.
 //            A direct update() while a booked re-render is pending discards that booking (the screen is already up to
 //            date, so it draws once). A set made during or after that update() is a new request and is not discarded.
-// Spec §4-10: after every mount/update, syncProps (src/controlled.js) makes input/textarea/select boxes that were given
+// Spec §4-10: after every mount/update, syncProps (src/component/controlled.js) makes input/textarea/select boxes that were given
 //            value/checked follow the state, and puts typed-over values back (locked boxes).
 // Spec §4-8: new FunctionComponent(App).mount(container); child components are expanded before diff;
 //            a re-render runs everything from the root, and diff -> patch touches only what changed.
 import { expand } from './h.js';
-import { renderInto } from './render.js';
-import { diff } from './diff.js';
-import { patch } from './patch.js';
-import { syncEvents } from './events.js';
+import { renderInto } from '../core/render.js';
+import { diff } from '../core/diff.js';
+import { patch } from '../core/patch.js';
+import { syncEvents } from '../core/events.js';
 import { syncProps } from './controlled.js';
 
 // The component whose function is running right now (null when no component is rendering).

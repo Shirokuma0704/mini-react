@@ -1,4 +1,4 @@
-// patch: apply a change list from src/diff.js to 실제 영역 (`container`), touching only what changed
+// patch: apply a change list from src/core/diff.js to 실제 영역 (`container`), touching only what changed
 // (the assignment: "바뀐 부분만 실제 영역에 반영"). Spec-draft §3.
 //
 // 실제 영역 is always drawn from a VDOM, so its child indexes are the VDOM's child indexes (no comments, no merged-

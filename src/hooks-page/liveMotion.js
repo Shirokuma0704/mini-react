@@ -4,8 +4,8 @@
 // Only element.animate() is used: no class, attribute or wrapper node is written into a card.
 // In jsdom (tests) element.animate does not exist, so nothing at all is created there.
 
-import { ARRIVE, TRAVEL, WIPE, canAnimate, flip, slideInLine } from './motion.js';
-import { classify } from './touched.js';
+import { ARRIVE, TRAVEL, WIPE, canAnimate, flip, slideInLine } from '../page-tools/motion.js';
+import { classify } from '../page-tools/touched.js';
 
 const COMPONENTS = ['counter', 'todos', 'timer', 'filter', 'form']; // #rules is plain DOM with only buttons
 const PROBES = [
@@ -94,7 +94,7 @@ export function watchLiveMotion(doc) {
   return () => observers.forEach((o) => o.disconnect());
 }
 
-// A line of the hooks log (src/hooksLog.js): a new line slides in on top; a line that was folded into (the timer
+// A line of the hooks log (src/hooks-page/hooksLog.js): a new line slides in on top; a line that was folded into (the timer
 // ticking) gets the short wipe on its text instead, since nothing new arrived.
 export function lineEntered(doc, li, isNew) {
   const win = doc.defaultView;

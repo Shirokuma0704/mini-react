@@ -12,7 +12,7 @@
 //   never replaces broken text the user typed with the browser's repaired version.
 // - both directions go through the VDOM (htmlToVdom / containerToVdom), so comments are dropped on the way, the
 //   same way Patch sees the text.
-import { htmlToVdom, containerToVdom, renderInto, rootToHtml } from './render.js';
+import { htmlToVdom, containerToVdom, renderInto, rootToHtml } from '../core/render.js';
 
 export function createSync({ source, preview, doc, onSourceChange = () => {} }) {
   let sourceDirty = false;

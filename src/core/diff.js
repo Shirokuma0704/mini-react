@@ -11,7 +11,7 @@
 // Paths are child indexes from the root ([] = root). oldPath = in the old tree, path = in the new tree.
 //
 // Order, per parent: its removes first, then its new children front to back (insert / move, then that child's own
-// changes). src/patch.js applies them with the same picture: removes, then front to back.
+// changes). src/core/patch.js applies them with the same picture: removes, then front to back.
 import { vdomEqual } from './vdomEqual.js';
 
 const keyOf = (n) => (n.kind === 'element' && Object.hasOwn(n.attrs, 'key') ? n.attrs.key : null);

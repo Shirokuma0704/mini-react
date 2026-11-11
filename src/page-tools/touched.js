@@ -1,5 +1,5 @@
 // Which nodes of 실제 영역 did patch really touch? Read from the DOM itself with a MutationObserver, not from the
-// diff's change list. The action log shows the count and the page flashes exactly these nodes (src/motion.js), so
+// diff's change list. The action log shows the count and the page flashes exactly these nodes (src/page-tools/motion.js), so
 // "바뀐 부분만 실제 영역에 반영" (the assignment) can be seen instead of believed.
 //
 // take() returns what happened since the last take():

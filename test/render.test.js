@@ -1,12 +1,12 @@
 // Tests for goal scope item 1: VDOM -> real DOM (render) and VDOM -> HTML text (for the text box).
-// The VDOM shape is spec-draft.md section 1 as built in src/domToVdom.js.
+// The VDOM shape is spec-draft.md section 1 as built in src/core/domToVdom.js.
 // Main property: going DOM -> VDOM -> (DOM or HTML) -> VDOM gives back the same VDOM,
 // so the page can move between the text box, the preview and 실제 영역 without losing anything the VDOM keeps.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
-import { domToVdom } from '../src/domToVdom.js';
-import { vdomToDom, vdomToHtml, htmlToVdom, containerToVdom, renderInto, rootToHtml } from '../src/render.js';
+import { domToVdom } from '../src/core/domToVdom.js';
+import { vdomToDom, vdomToHtml, htmlToVdom, containerToVdom, renderInto, rootToHtml } from '../src/core/render.js';
 
 function makeDoc() {
   return new JSDOM('<!DOCTYPE html><body></body>').window.document;

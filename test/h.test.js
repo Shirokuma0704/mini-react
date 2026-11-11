@@ -1,6 +1,6 @@
 // Tests for feature 14: h() builds VDOM, h(Component, props) makes a component node, expand() unrolls components
 // into plain VDOM before diff. Spec-draft §4-1 (Q1, Q8) and §4-8 (AI candidates he accepted: "unroll before diff",
-// "on… names go to the event slot"). Written by the orchestrator (Opus) BEFORE src/h.js exists (his rule 11-09:
+// "on… names go to the event slot"). Written by the orchestrator (Opus) BEFORE src/component/h.js exists (his rule 11-09:
 // the hand that writes the code does not write its tests).
 //
 // VDOM shape is spec §1 (kind / tag / attrs / children). Phase 2 adds:
@@ -9,9 +9,9 @@
 //   - a new kind: { kind: 'component', fn, props } — only before expand(); diff never sees it.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { h, expand } from '../src/h.js';
-import { diff } from '../src/diff.js';
-import { vdomEqual } from '../src/vdomEqual.js';
+import { h, expand } from '../src/component/h.js';
+import { diff } from '../src/core/diff.js';
+import { vdomEqual } from '../src/core/vdomEqual.js';
 
 const text = (t) => ({ kind: 'text', text: t });
 

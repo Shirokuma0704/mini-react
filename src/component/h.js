@@ -2,7 +2,7 @@
 // Spec §4-1: h('button', {}, ['3']) is a small helper; h(Comp, props) only records "this component, these props".
 // Spec §4-2 / §4-8: props named on... (functions) go to the node's `events` slot; diff never looks at events.
 // Spec §4-10: on input / textarea / select, `value` and `checked` are also copied to the node's
-//            `props` slot (String value / Boolean checked; null or undefined = not given) so that src/controlled.js can
+//            `props` slot (String value / Boolean checked; null or undefined = not given) so that src/component/controlled.js can
 //            make the live box follow state. diff never looks at props. Choice the spec does not make: for
 //            <input type=checkbox|radio>, `value` stays a plain attribute (it is not the typed text there).
 // Spec §4-8: expand() calls every component first, so Phase 1's diff and patch work unchanged.

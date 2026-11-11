@@ -1,4 +1,4 @@
-// VDOM -> real DOM, and VDOM -> HTML text (goal scope item 1). The reverse of src/domToVdom.js.
+// VDOM -> real DOM, and VDOM -> HTML text (goal scope item 1). The reverse of src/core/domToVdom.js.
 //
 // Every function that creates nodes takes `doc` (a Document) so the same file runs in a browser and in Node + jsdom.
 //
@@ -59,7 +59,7 @@ export function vdomToDom(vnode, doc, opts = {}) {
 }
 
 // Same, for a node that will live inside `parent` (an element already in a document): the namespace comes from the
-// parent, so a node patched in under <svg> is still SVG (src/patch.js).
+// parent, so a node patched in under <svg> is still SVG (src/core/patch.js).
 export function vdomToDomUnder(parent, vnode, doc, opts = {}) {
   let ns = parent.namespaceURI === SVG_NS || parent.namespaceURI === MATH_NS ? parent.namespaceURI : null;
   if (ns === SVG_NS && parent.localName === 'foreignObject') ns = null;

@@ -6,14 +6,14 @@
 // it means the component did not run again (spec §4-4: same value → skipped).
 //
 // How a render is seen: every card has a "그린 횟수" probe outside its container, bumped each time the component
-// function runs (src/hooksPage.js countRenders). One MutationObserver per card watches that probe AND the card's
+// function runs (src/hooks-page/hooksPage.js countRenders). One MutationObserver per card watches that probe AND the card's
 // container. Its callback runs as a microtask after the render (and its patch) finished, so the same batch of
-// records says both "it ran again" and "these nodes were touched" (counted by classify() from src/touched.js, the
+// records says both "it ran again" and "these nodes were touched" (counted by classify() from src/page-tools/touched.js, the
 // same counting as the verification page).
 //
 // Render lines that follow each other with nothing in between (the timer ticking) are folded into one line.
-import { clock } from './actionLog.js';
-import { classify } from './touched.js';
+import { clock } from '../page-tools/actionLog.js';
+import { classify } from '../page-tools/touched.js';
 
 const CARDS = [
   { id: 'counter', name: '카운터' },
